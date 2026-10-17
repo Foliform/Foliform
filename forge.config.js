@@ -4,6 +4,9 @@ const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 module.exports = {
   packagerConfig: {
     asar: true,
+    // Keep the executable name lowercase to match the Debian/RPM package
+    // metadata derived from package.json's lowercase name.
+    executableName: 'foliform',
     icon: 'assets/app-icon',
     extraResource: ['assets'],
     // The Vite plugin normally packages only .vite; keep dependencies that
