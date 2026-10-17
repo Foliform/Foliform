@@ -10,9 +10,9 @@ These guides cover the preview, publication details, and export tasks.
 
 ## Review your book
 
-- [Preview modes](./preview-modes) — inspect paginated, PDF, web, and EPUB
+- [Preview modes](/docs/preview-modes) — inspect paginated, PDF, web, and EPUB
   reading views.
-- [Book details and page furniture](./book-details-and-page-furniture) — set
+- [Book details and page furniture](/docs/book-details-and-page-furniture) — set
   metadata, page numbers, and running headers.
-- [Export a book](./exporting-a-book) — run the export check and create PDF,
+- [Export a book](/docs/exporting-a-book) — run the export check and create PDF,
   EPUB, or HTML editions.

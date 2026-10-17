@@ -34,5 +34,5 @@ Keep referenced files in the project and avoid moving or renaming them after add
 
 ## Next steps
 
-- [Markdown and HTML reference](./formatting-reference)
-- [Export a book](./exporting-a-book)
+- [Markdown and HTML reference](/docs/formatting-reference)
+- [Export a book](/docs/exporting-a-book)

@@ -11,7 +11,7 @@ Use the **Style** tab in the inspector to control how the manuscript is typeset.
 
 Select a built-in or saved template in the **Template** field. Applying a template replaces the current style settings. You can then refine the settings for this manuscript.
 
-See [Templates and styles](./templates-and-styles) to compare the built-in choices and create reusable templates.
+See [Templates and styles](/docs/templates-and-styles) to compare the built-in choices and create reusable templates.
 
 ## Adjust typography and pages
 
@@ -25,5 +25,5 @@ Review the affected pages in Book or PDF View after changing fonts, sizes, margi
 
 ## Next steps
 
-- [Templates and styles](./templates-and-styles)
-- [Preview modes](./preview-modes)
+- [Templates and styles](/docs/templates-and-styles)
+- [Preview modes](/docs/preview-modes)

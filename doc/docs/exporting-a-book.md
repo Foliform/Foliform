@@ -31,5 +31,5 @@ Check metadata and page furniture, then open or inspect the exported file in a s
 
 ## Next steps
 
-- [Preview modes](./preview-modes)
-- [Book details and page furniture](./book-details-and-page-furniture)
+- [Preview modes](/docs/preview-modes)
+- [Book details and page furniture](/docs/book-details-and-page-furniture)

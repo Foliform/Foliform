@@ -26,14 +26,14 @@ The app is designed around a few connected tasks:
 
 ## Your first book
 
-1. [Create or open a project](./create-and-open-projects).
-2. [Write in the editor](./write-in-the-editor) and format your chapters.
-3. [Choose a book style](./book-style) and [add images](./images-and-assets).
-4. [Review the preview](./preview-modes) and check your [book details](./book-details-and-page-furniture).
-5. [Export an edition](./exporting-a-book).
+1. [Create or open a project](/docs/create-and-open-projects).
+2. [Write in the editor](/docs/write-in-the-editor) and format your chapters.
+3. [Choose a book style](/docs/book-style) and [add images](/docs/images-and-assets).
+4. [Review the preview](/docs/preview-modes) and check your [book details](/docs/book-details-and-page-furniture).
+5. [Export an edition](/docs/exporting-a-book).
 
 ## Keep reading
 
-- [Create or open a project](./create-and-open-projects)
-- [Start writing](./write-in-the-editor)
+- [Create or open a project](/docs/create-and-open-projects)
+- [Start writing](/docs/write-in-the-editor)
 - [See all guides](/docs)

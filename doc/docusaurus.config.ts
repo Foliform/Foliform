@@ -16,7 +16,7 @@ const config: Config = {
 
   // Set the production url of your site here
   url: 'https://foliform.github.io',
-  baseUrl: '/Foliform',
+  baseUrl: '/Foliform/',
   trailingSlash: false,
 
   onBrokenLinks: 'throw',

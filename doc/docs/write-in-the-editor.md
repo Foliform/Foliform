@@ -39,6 +39,6 @@ Switch between **Editor** and **Preview** as you work. Check chapter starts, pag
 
 ## Next steps
 
-- [Markdown and HTML reference](./formatting-reference)
-- [Choose a book style](./book-style)
-- [Preview modes](./preview-modes)
+- [Markdown and HTML reference](/docs/formatting-reference)
+- [Choose a book style](/docs/book-style)
+- [Preview modes](/docs/preview-modes)

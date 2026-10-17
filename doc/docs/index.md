@@ -11,29 +11,29 @@ Foliform brings your draft, book design, and publishing tools into one desktop w
 
 Create a manuscript, understand the workspace, and follow the full path from a new project to a finished edition.
 
-[Get started →](./getting-started)
+[Get started →](/docs/getting-started)
 
-- [Create and open a project](./create-and-open-projects)
+- [Create and open a project](/docs/create-and-open-projects)
 
 ## Write and shape your book
 
 Learn the editor, add images, choose a style, and make your book's typography and page design your own.
 
-- [Writing and design](./writing-and-design)
-- [Write in the editor](./write-in-the-editor)
-- [Add images and assets](./images-and-assets)
-- [Choose a book style](./book-style)
-- [Templates and styles](./templates-and-styles)
+- [Writing and design](/docs/writing-and-design)
+- [Write in the editor](/docs/write-in-the-editor)
+- [Add images and assets](/docs/images-and-assets)
+- [Choose a book style](/docs/book-style)
+- [Templates and styles](/docs/templates-and-styles)
 
 ## Look up a detail
 
 Find syntax examples or check how preview and export work across PDF, EPUB, and HTML.
 
-- [Markdown and HTML reference](./formatting-reference)
-- [Preview and publishing](./preview-and-publishing)
-- [Preview modes](./preview-modes)
-- [Book details and page furniture](./book-details-and-page-furniture)
-- [Export a book](./exporting-a-book)
+- [Markdown and HTML reference](/docs/formatting-reference)
+- [Preview and publishing](/docs/preview-and-publishing)
+- [Preview modes](/docs/preview-modes)
+- [Book details and page furniture](/docs/book-details-and-page-furniture)
+- [Export a book](/docs/exporting-a-book)
 
 ## The book-making workflow
 

@@ -27,5 +27,5 @@ Review these elements in Preview before exporting, especially after changing the
 
 ## Next steps
 
-- [Preview modes](./preview-modes)
-- [Export a book](./exporting-a-book)
+- [Preview modes](/docs/preview-modes)
+- [Export a book](/docs/exporting-a-book)

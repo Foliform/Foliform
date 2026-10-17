@@ -21,6 +21,6 @@ From the welcome screen, choose the option to open an existing project and selec
 
 ## Next steps
 
-- [Write in the editor](./write-in-the-editor)
-- [Add images and assets](./images-and-assets)
-- [Set book details and page furniture](./book-details-and-page-furniture)
+- [Write in the editor](/docs/write-in-the-editor)
+- [Add images and assets](/docs/images-and-assets)
+- [Set book details and page furniture](/docs/book-details-and-page-furniture)

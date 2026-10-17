@@ -26,5 +26,5 @@ Use the page controls to move through the book and the zoom controls to inspect 
 
 ## Next steps
 
-- [Set book details and page furniture](./book-details-and-page-furniture)
-- [Export a book](./exporting-a-book)
+- [Set book details and page furniture](/docs/book-details-and-page-furniture)
+- [Export a book](/docs/exporting-a-book)
