@@ -1,9 +1,30 @@
 const { FusesPlugin } = require('@electron-forge/plugin-fuses');
 const { FuseV1Options, FuseVersion } = require('@electron/fuses');
+const fs = require('node:fs/promises');
+const path = require('node:path');
+
+function removeForeignSqlitePrebuilds(buildPath, _electronVersion, platform, arch, callback) {
+  const prebuildsPath = path.join(
+    buildPath,
+    'node_modules',
+    'better-sqlite3',
+    'prebuilds',
+  );
+  const targetPrebuild = `${platform}-${arch}.node`;
+
+  fs.readdir(prebuildsPath)
+    .then(files => Promise.all(
+      files
+        .filter(file => file.endsWith('.node') && file !== targetPrebuild)
+        .map(file => fs.rm(path.join(prebuildsPath, file))),
+    ))
+    .then(() => callback(), callback);
+}
 
 module.exports = {
   packagerConfig: {
     asar: true,
+    afterCopy: [removeForeignSqlitePrebuilds],
     // Keep the executable name lowercase to match the Debian/RPM package
     // metadata derived from package.json's lowercase name.
     executableName: 'foliform',

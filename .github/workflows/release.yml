@@ -23,8 +23,6 @@ jobs:
             artifact: windows
           - os: macos-latest
             artifact: macos
-          - os: ubuntu-latest
-            artifact: linux
     runs-on: ${{ matrix.os }}
     steps:
       - name: Check out repository
@@ -40,21 +38,27 @@ jobs:
         shell: bash
         run: npm version "${GITHUB_REF_NAME#v}" --no-git-tag-version --allow-same-version
 
-      - name: Install Linux packaging dependencies
-        if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install --yes rpm
-
       - name: Install app dependencies
         run: npm ci
 
       - name: Make desktop installers
         run: npm run make
 
-      - name: Upload release files
+      - name: Upload Windows installer
+        if: matrix.artifact == 'windows'
         uses: actions/upload-artifact@v4
         with:
           name: release-${{ matrix.artifact }}
-          path: out/make/**
+          path: out/make/squirrel.windows/x64/*Setup.exe
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload macOS archive
+        if: matrix.artifact == 'macos'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.artifact }}
+          path: out/make/zip/darwin/*/*.zip
           if-no-files-found: error
           retention-days: 7
 

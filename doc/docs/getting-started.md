@@ -9,11 +9,6 @@ Foliform is a desktop studio for writing, designing, and publishing books.
 It brings your content and its typeset preview together so you can shape both
 the manuscript and the reading experience in one project.
 
-![Foliform welcome screen with options to create or open a project](/img/manuscript-welcome.png)
-
-*The welcome screen is the starting point for creating a manuscript or
-reopening an existing project.*
-
 ## What you can make
 
 Use Foliform to work on Markdown or HTML content, then prepare a book for

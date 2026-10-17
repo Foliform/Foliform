@@ -15,8 +15,6 @@ A Foliform project keeps your writing, book settings, and imported assets togeth
 
 The title is a starting point. You can set the publication title and author later in the Metadata tab.
 
-![New manuscript dialog with a working title field and Create project button](/img/manuscript-new-project.png)
-
 ## Reopen a project
 
 From the welcome screen, choose the option to open an existing project and select its project folder. Keep the folder intact: it contains the manuscript and the assets referenced by its content.
