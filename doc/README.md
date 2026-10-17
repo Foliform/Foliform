@@ -40,9 +40,11 @@ deployment options.
 
 The `Deploy documentation` GitHub Actions workflow builds this site and
 publishes it to GitHub Pages after changes to `doc/` are merged into `main`.
-The repository must have GitHub Pages configured to use **GitHub Actions** as
-its build and deployment source. You can also start the workflow manually from
-the Actions tab.
+Before its first run, a repository administrator must enable Pages in the
+repository settings: **Settings → Pages → Build and deployment → Source →
+GitHub Actions**. The workflow token can deploy to an enabled Pages site, but
+cannot create or enable the site itself. You can start later deployments
+manually from the Actions tab.
 
 ## Desktop releases
 
