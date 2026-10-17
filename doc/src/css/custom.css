@@ -1,0 +1,95 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap');
+
+:root {
+  --manuscript-paper: #f8f8f7;
+  --manuscript-ink: #1c1c20;
+  --manuscript-muted: #66666f;
+  --manuscript-accent: #7759e8;
+  --manuscript-accent-dark: #6346d5;
+  --manuscript-line: #e7e7e5;
+  --manuscript-display: 'Playfair Display', Georgia, serif;
+  --ifm-color-primary: #6346d5;
+  --ifm-color-primary-dark: #583dc4;
+  --ifm-color-primary-darker: #533abc;
+  --ifm-color-primary-darkest: #45309b;
+  --ifm-color-primary-light: #7258dc;
+  --ifm-color-primary-lighter: #8069e1;
+  --ifm-color-primary-lightest: #a08fed;
+  --ifm-navbar-background-color: var(--manuscript-paper);
+  --ifm-navbar-shadow: none;
+  --docusaurus-highlighted-code-line-bg: rgb(0 0 0 / 8%);
+}
+
+html[data-theme='dark'] {
+  --manuscript-paper: #1d1d21;
+  --manuscript-ink: #f3f3f4;
+  --manuscript-muted: #b0b0b8;
+  --manuscript-accent: #a18af4;
+  --manuscript-accent-dark: #b7a6fa;
+  --manuscript-line: #38383e;
+  --ifm-color-primary: #a18af4;
+  --ifm-color-primary-dark: #8d73ed;
+  --ifm-color-primary-darker: #8267e9;
+  --ifm-color-primary-darkest: #6244db;
+  --ifm-color-primary-light: #b5a4f7;
+  --ifm-color-primary-lighter: #c1b4f9;
+  --ifm-color-primary-lightest: #ddd5fc;
+  --ifm-navbar-background-color: #1d1d21;
+  --docusaurus-highlighted-code-line-bg: rgb(0 0 0 / 25%);
+}
+
+.navbar {
+  border-bottom: 1px solid var(--manuscript-line);
+}
+
+.navbar__title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+}
+
+.navbarCta {
+  border-radius: 5px;
+  background: var(--ifm-color-primary);
+  color: #fff !important;
+  font-weight: 600;
+}
+
+.navbarCta:hover {
+  background: var(--ifm-color-primary-dark);
+  color: #fff !important;
+}
+
+/* Keep the guide experience calm and easy to scan. */
+.theme-doc-markdown {
+  --ifm-h1-font-size: 2.4rem;
+  --ifm-h2-font-size: 1.65rem;
+  --ifm-h3-font-size: 1.2rem;
+  max-width: 850px;
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.theme-doc-markdown h1,
+.theme-doc-markdown h2,
+.theme-doc-markdown h3 {
+  letter-spacing: -0.035em;
+}
+
+.theme-doc-markdown h2 {
+  margin-top: 2.5rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid var(--manuscript-line);
+}
+
+.theme-doc-markdown a {
+  font-weight: 600;
+}
+
+.theme-doc-sidebar-item-category > .menu__list-item-collapsible {
+  margin-top: 0.55rem;
+}
+
+.footer {
+  background: #1c1c20;
+}

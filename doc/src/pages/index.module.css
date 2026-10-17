@@ -1,0 +1,946 @@
+.hero {
+  position: relative;
+  overflow: hidden;
+  padding: 5.25rem 0 4.1rem;
+  background: var(--manuscript-paper);
+}
+
+.heroGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  gap: 2.8rem;
+}
+
+.heroCopy {
+  position: relative;
+  z-index: 1;
+  max-width: 780px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.eyebrow {
+  display: inline-block;
+  margin-bottom: 1rem;
+  color: var(--manuscript-accent-dark);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.heroBadge {
+  margin-bottom: 1.2rem;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--manuscript-line);
+  border-radius: 999px;
+  background: var(--ifm-background-color);
+  color: var(--manuscript-muted);
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+}
+
+.heroCopy h1,
+.sectionIntro h2,
+.writingCopy h2,
+.editionsIntro h2,
+.guideInner h2 {
+  color: var(--manuscript-ink);
+  font-family: var(--manuscript-display);
+  font-weight: 500;
+  letter-spacing: -0.055em;
+}
+
+.heroCopy h1 {
+  margin: 0;
+  font-family: var(--ifm-font-family-base);
+  font-size: clamp(3.3rem, 6.2vw, 5.5rem);
+  font-weight: 600;
+  letter-spacing: -0.075em;
+  line-height: 0.99;
+}
+
+.heroCopy h1 span,
+.sectionIntro h2 span,
+.editionsIntro h2 span {
+  color: var(--manuscript-accent-dark);
+  font-style: italic;
+}
+
+.heroCopy h1 span {
+  font-style: normal;
+}
+
+.lede {
+  max-width: 650px;
+  margin: 1.35rem auto 0;
+  color: var(--manuscript-muted);
+  font-size: 1.08rem;
+  line-height: 1.7;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.35rem;
+  justify-content: center;
+  margin-top: 1.7rem;
+}
+
+.primaryButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  border: 0;
+  border-radius: 6px;
+  background: var(--ifm-color-primary);
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 600;
+  box-shadow: 0 3px 8px rgb(70 49 150 / 15%);
+}
+
+.primaryButton:hover {
+  background: var(--ifm-color-primary-dark);
+  color: white;
+}
+
+.secondaryButton {
+  display: inline-flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0.7rem 1.15rem;
+  border: 1px solid var(--manuscript-line);
+  border-radius: 6px;
+  background: var(--ifm-background-color);
+  color: var(--manuscript-ink);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.secondaryButton:hover {
+  border-color: var(--manuscript-muted);
+  color: var(--manuscript-ink);
+  text-decoration: none;
+}
+
+.textLink,
+.guideTextLink {
+  color: var(--manuscript-ink);
+  font-size: 0.84rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.textLink:hover,
+.guideTextLink:hover {
+  color: var(--manuscript-accent-dark);
+  text-decoration: none;
+}
+
+.platformNote {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  justify-content: center;
+  margin-top: 1.4rem;
+  color: var(--manuscript-muted);
+  font-size: 0.75rem;
+}
+
+.liveDot,
+.saved i,
+.footerDot {
+  display: inline-block;
+  width: 0.45rem;
+  height: 0.45rem;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #719b74;
+}
+
+.studio {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  width: min(100%, 980px);
+  margin: 0 auto;
+  border: 1px solid var(--manuscript-line);
+  border-radius: 10px;
+  background: #eeece6;
+  box-shadow: 0 25px 70px rgb(35 35 40 / 12%);
+}
+
+.studioBar,
+.studioFooter {
+  display: flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.9rem;
+  background: #292720;
+  color: rgb(255 250 243 / 74%);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+}
+
+.windowDots {
+  display: flex;
+  gap: 0.28rem;
+}
+
+.windowDots i {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  background: #d17c64;
+}
+
+.windowDots i:nth-child(2) {
+  background: #d7b16c;
+}
+
+.windowDots i:nth-child(3) {
+  background: #81a078;
+}
+
+.barSlash {
+  margin: 0 0.32rem;
+  color: #d17c64;
+}
+
+.saved {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: rgb(255 250 243 / 63%);
+  font-size: 0.48rem;
+}
+
+.saved i {
+  width: 0.36rem;
+  height: 0.36rem;
+}
+
+.studioBody {
+  display: grid;
+  min-height: 390px;
+  grid-template-columns: 0.92fr 1.08fr;
+  gap: 0.5rem;
+  padding: 0.55rem;
+}
+
+.sourcePane,
+.bookPane {
+  position: relative;
+  min-width: 0;
+  padding: 0.8rem 0.72rem;
+}
+
+.sourcePane {
+  overflow: hidden;
+  border-radius: 3px;
+  background: #302e29;
+  color: #ded9cd;
+}
+
+.bookPane {
+  display: flex;
+  flex-direction: column;
+  border-radius: 3px;
+  background: #dedbd4;
+}
+
+.paneLabel {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  color: var(--manuscript-muted);
+  font-size: 0.47rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.sourcePane .paneLabel {
+  color: #a49d90;
+}
+
+.paneLabel span {
+  color: #ae7764;
+}
+
+.sourcePane pre {
+  overflow: hidden;
+  margin: 1.55rem 0 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #e4dfd4;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: clamp(0.57rem, 0.78vw, 0.69rem);
+  line-height: 1.9;
+  white-space: pre-wrap;
+}
+
+.codeMuted {
+  color: #9c957f;
+}
+
+.codeHeading {
+  color: #e7b6a3;
+}
+
+.codeAccent {
+  color: #d88e74;
+}
+
+.codeQuote {
+  color: #d7cda9;
+  font-style: italic;
+}
+
+.sourceFooter {
+  position: absolute;
+  right: 0.72rem;
+  bottom: 0.72rem;
+  left: 0.72rem;
+  display: flex;
+  justify-content: space-between;
+  color: #9c957f;
+  font-size: 0.42rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+
+.bookPage {
+  position: relative;
+  display: flex;
+  min-height: 278px;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  margin-top: 0.6rem;
+  padding: 1.3rem clamp(1rem, 2.5vw, 2rem);
+  background: #faf7f0;
+  box-shadow: inset 0 0 0 1px rgb(41 39 32 / 5%);
+}
+
+.chapterLabel {
+  color: var(--manuscript-accent-dark);
+  font-size: 0.48rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+.bookPage h2 {
+  margin: 0.65rem 0 0.8rem;
+  color: #302922;
+  font-family: var(--manuscript-display);
+  font-size: clamp(1.6rem, 3vw, 2.45rem);
+  font-weight: 500;
+  letter-spacing: -0.05em;
+  line-height: 1.02;
+}
+
+.pageRule,
+.quoteRule {
+  width: 2.2rem;
+  height: 1px;
+  background: var(--manuscript-accent);
+}
+
+.bookPage > p {
+  margin: 0.8rem 0 0;
+  color: #62584e;
+  font-family: var(--manuscript-display);
+  font-size: clamp(0.7rem, 1vw, 0.81rem);
+  line-height: 1.7;
+}
+
+.bookPage blockquote {
+  margin: 0.8rem 0 0;
+  padding: 0 0 0 0.75rem;
+  border-left: 1px solid #c5654d;
+  color: #66584d;
+  font-family: var(--manuscript-display);
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
+.bookPage cite {
+  display: block;
+  margin-top: 0.35rem;
+  color: #8d8277;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.53rem;
+  font-style: normal;
+}
+
+.pageNumber {
+  position: absolute;
+  right: 1rem;
+  bottom: 0.65rem;
+  color: #8d8277;
+  font-family: var(--manuscript-display);
+  font-size: 0.57rem;
+}
+
+.studioFooter {
+  min-height: 30px;
+  font-size: 0.48rem;
+  letter-spacing: 0.06em;
+}
+
+.studioFooter > span:first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.footerDot {
+  width: 0.36rem;
+  height: 0.36rem;
+}
+
+.studioFooter b {
+  color: #d17c64;
+}
+
+.capabilityStrip {
+  border-top: 1px solid var(--manuscript-line);
+  border-bottom: 1px solid var(--manuscript-line);
+  background: var(--ifm-background-color);
+}
+
+.stripInner {
+  display: flex;
+  min-height: 67px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.stripInner span {
+  color: var(--manuscript-muted);
+  font-size: 0.72rem;
+}
+
+.stripInner b {
+  margin-right: 0.42rem;
+  color: var(--manuscript-accent-dark);
+  font-size: 0.59rem;
+  letter-spacing: 0.05em;
+}
+
+.workflow {
+  padding: 6rem 0;
+  background: var(--ifm-background-color);
+}
+
+.sectionIntro {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  align-items: end;
+  column-gap: 3rem;
+  max-width: 900px;
+  margin-bottom: 2.4rem;
+}
+
+.sectionIntro .eyebrow {
+  grid-column: 1 / -1;
+}
+
+.sectionIntro h2,
+.writingCopy h2,
+.editionsIntro h2 {
+  margin: 0;
+  font-size: clamp(2.3rem, 4.5vw, 3.65rem);
+  line-height: 1.08;
+}
+
+.sectionIntro p,
+.writingCopy p,
+.editionsIntro > p,
+.guideInner p {
+  margin: 0;
+  color: var(--manuscript-muted);
+  font-size: 0.94rem;
+  line-height: 1.8;
+}
+
+.workflowGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid var(--manuscript-line);
+}
+
+.workflowCard {
+  min-height: 205px;
+  padding: 1.5rem 1.4rem 1.35rem 0;
+}
+
+.workflowCard + .workflowCard {
+  padding-left: 1.4rem;
+  border-left: 1px solid var(--manuscript-line);
+}
+
+.stepNumber {
+  color: var(--manuscript-accent-dark);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+}
+
+.workflowCard h3 {
+  max-width: 270px;
+  margin: 1.1rem 0 0.65rem;
+  color: var(--manuscript-ink);
+  font-family: var(--manuscript-display);
+  font-size: 1.45rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.workflowCard p {
+  max-width: 340px;
+  margin: 0;
+  color: var(--manuscript-muted);
+  font-size: 0.86rem;
+  line-height: 1.75;
+}
+
+.writing {
+  padding: 5.5rem 0;
+  background: var(--manuscript-paper);
+}
+
+.writingGrid {
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr;
+  align-items: center;
+  gap: 4rem;
+}
+
+.writingCopy h2 {
+  font-size: clamp(2.2rem, 4vw, 3.25rem);
+}
+
+.writingCopy p {
+  max-width: 430px;
+  margin-top: 1rem;
+}
+
+.arrowLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 1.4rem;
+  color: var(--manuscript-accent-dark);
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.arrowLink:hover {
+  color: var(--manuscript-ink);
+  text-decoration: none;
+}
+
+.quoteDemo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  overflow: hidden;
+  border: 1px solid var(--manuscript-line);
+  background: var(--ifm-background-color);
+  box-shadow: 0 16px 45px rgb(48 37 30 / 6%);
+}
+
+.quoteSource,
+.quoteResult {
+  min-height: 230px;
+  padding: 1.4rem;
+}
+
+.quoteSource {
+  background: #302e29;
+  color: #e4dfd4;
+}
+
+.demoLabel {
+  color: var(--manuscript-accent-dark);
+  font-size: 0.54rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.quoteSource .demoLabel {
+  color: #d88e74;
+}
+
+.quoteSource pre {
+  margin: 2.3rem 0;
+  color: #e7dcbf;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 0.79rem;
+  line-height: 1.9;
+  white-space: pre-wrap;
+}
+
+.quoteResult {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: #fbf8f1;
+}
+
+.quoteResult blockquote {
+  margin: 1.4rem 0 1.15rem;
+  padding-left: 0.9rem;
+  border-left: 1px solid var(--manuscript-accent);
+  color: #4b4037;
+  font-family: var(--manuscript-display);
+  font-size: 1.18rem;
+  font-style: italic;
+  line-height: 1.45;
+}
+
+.quoteResult cite {
+  display: block;
+  margin-top: 0.7rem;
+  color: #8d8277;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.65rem;
+  font-style: normal;
+}
+
+.quoteRule {
+  width: 1.8rem;
+}
+
+.demoCaption {
+  margin-top: 0.65rem;
+  color: #8d8277;
+  font-family: var(--manuscript-display);
+  font-size: 0.68rem;
+  font-style: italic;
+}
+
+.editions {
+  padding: 5.5rem 0 5.8rem;
+  background: var(--ifm-background-color);
+}
+
+.editionsIntro {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 2.5rem;
+}
+
+.editionsIntro > div {
+  flex: 1;
+}
+
+.editionsIntro > p {
+  max-width: 390px;
+  padding-bottom: 0.4rem;
+}
+
+.editionGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 2.3rem;
+}
+
+.editionCard {
+  position: relative;
+  min-height: 190px;
+  padding: 1.35rem;
+  border: 1px solid var(--manuscript-line);
+  background: var(--ifm-background-color);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.editionCard:hover {
+  box-shadow: 0 15px 35px rgb(48 37 30 / 7%);
+  transform: translateY(-3px);
+}
+
+.editionLabel {
+  color: var(--manuscript-accent-dark);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.editionCard h3 {
+  margin: 1.1rem 0 0.35rem;
+  color: var(--manuscript-ink);
+  font-family: var(--manuscript-display);
+  font-size: 2rem;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+}
+
+.editionCard p {
+  max-width: 290px;
+  margin: 0;
+  color: var(--manuscript-muted);
+  font-size: 0.83rem;
+  line-height: 1.65;
+}
+
+.editionArrow {
+  position: absolute;
+  right: 1.3rem;
+  bottom: 1.2rem;
+  color: var(--manuscript-accent-dark);
+  font-size: 0.92rem;
+}
+
+.guideBanner {
+  padding: 4.25rem 0;
+  background: #202024;
+}
+
+.guideInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.guideInner .eyebrow {
+  color: #e39a83;
+}
+
+.guideInner h2 {
+  margin: 0;
+  color: #fffaf3;
+  font-size: clamp(2rem, 3.6vw, 2.8rem);
+}
+
+.guideInner p {
+  max-width: 510px;
+  margin-top: 0.8rem;
+  color: rgb(255 250 243 / 72%);
+}
+
+.guideActions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.9rem;
+}
+
+.guideButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  border: 1px solid rgb(255 255 255 / 38%);
+  border-radius: 3px;
+  color: white;
+  font-size: 0.88rem;
+}
+
+.guideButton:hover {
+  border-color: white;
+  background: white;
+  color: var(--manuscript-ink);
+}
+
+.guideTextLink {
+  color: rgb(255 250 243 / 78%);
+  font-size: 0.78rem;
+}
+
+@media screen and (max-width: 996px) {
+  .hero {
+    padding: 4rem 0;
+  }
+
+  .heroGrid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2.2rem;
+  }
+
+  .heroCopy h1 {
+    font-size: clamp(3rem, 7vw, 4.4rem);
+  }
+
+  .studioBody {
+    min-height: 325px;
+  }
+
+  .bookPage {
+    min-height: 255px;
+  }
+
+  .stripInner {
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 1rem 0;
+  }
+
+  .stripInner span {
+    width: calc(50% - 1rem);
+  }
+
+  .writingGrid {
+    gap: 2rem;
+  }
+}
+
+@media screen and (max-width: 700px) {
+  .heroGrid,
+  .sectionIntro,
+  .writingGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .heroCopy h1 {
+    font-size: clamp(3.25rem, 14vw, 4.8rem);
+  }
+
+  .studio {
+    margin: 1.1rem 0.25rem 0;
+    transform: none;
+  }
+
+  .studioBody {
+    min-height: 290px;
+  }
+
+  .bookPage {
+    min-height: 230px;
+    padding: 1rem;
+  }
+
+  .sourcePane pre {
+    font-size: 0.58rem;
+  }
+
+  .stripInner {
+    justify-content: flex-start;
+    gap: 0.8rem;
+  }
+
+  .stripInner span {
+    width: calc(50% - 0.5rem);
+    font-size: 0.65rem;
+  }
+
+  .workflow {
+    padding: 4rem 0;
+  }
+
+  .sectionIntro {
+    row-gap: 0;
+  }
+
+  .sectionIntro p {
+    margin-top: 1rem;
+  }
+
+  .workflowGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .workflowCard,
+  .workflowCard + .workflowCard {
+    min-height: 0;
+    padding: 1.3rem 0;
+    border-bottom: 1px solid var(--manuscript-line);
+    border-left: 0;
+  }
+
+  .workflowCard h3 {
+    margin-top: 0.65rem;
+  }
+
+  .writing,
+  .editions {
+    padding: 4rem 0;
+  }
+
+  .writingGrid {
+    gap: 2rem;
+  }
+
+  .quoteSource,
+  .quoteResult {
+    min-height: 200px;
+    padding: 1rem;
+  }
+
+  .quoteSource pre {
+    margin: 1.7rem 0;
+    font-size: 0.67rem;
+  }
+
+  .quoteResult blockquote {
+    font-size: 1rem;
+  }
+
+  .editionsIntro {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+
+  .editionGrid {
+    grid-template-columns: 1fr;
+    gap: 0.7rem;
+  }
+
+  .editionCard {
+    min-height: 155px;
+  }
+
+  .guideInner {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media screen and (max-width: 420px) {
+  .studioBody {
+    grid-template-columns: 0.88fr 1.12fr;
+    gap: 0.35rem;
+    padding: 0.35rem;
+  }
+
+  .sourcePane,
+  .bookPane {
+    padding: 0.65rem 0.5rem;
+  }
+
+  .paneLabel {
+    font-size: 0.4rem;
+  }
+
+  .bookPage h2 {
+    font-size: 1.55rem;
+  }
+
+  .bookPage > p {
+    font-size: 0.65rem;
+  }
+
+  .bookPage blockquote {
+    font-size: 0.65rem;
+  }
+
+  .studioFooter,
+  .studioBar {
+    padding: 0 0.55rem;
+    font-size: 0.43rem;
+  }
+}
