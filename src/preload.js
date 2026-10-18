@@ -13,7 +13,13 @@ contextBridge.exposeInMainWorld('manuscript', {
   renderPdf: (project) => ipcRenderer.invoke('preview:pdf', project),
   exportBook: (format, project, settings) => ipcRenderer.invoke('export:book', { format, project, settings }),
   importGoogleFont: (root, family) => ipcRenderer.invoke('font:import', { root, family }),
-  openTemplateManager: () => ipcRenderer.invoke('window:openTemplateManager'),
+  openTemplateManager: (theme) => ipcRenderer.invoke('window:openTemplateManager', theme),
+  setTheme: (theme) => ipcRenderer.send('theme:changed', theme),
+  onThemeChange: (callback) => {
+    const listener = (_, theme) => callback(theme);
+    ipcRenderer.on('theme:changed', listener);
+    return () => ipcRenderer.removeListener('theme:changed', listener);
+  },
   listTemplates: () => ipcRenderer.invoke('template:list'),
   saveTemplate: (template) => ipcRenderer.invoke('template:save', template),
   deleteTemplate: (id) => ipcRenderer.invoke('template:delete', id),

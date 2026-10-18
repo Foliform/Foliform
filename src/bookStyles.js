@@ -43,27 +43,55 @@ export function kitFontRoles(kit = {}) {
   };
 }
 
+export function dropCapMetrics(kit = {}, size = kit.size || 18) {
+  const lines = kit.dropCapLines === 2 ? 2 : 3;
+  const twoLines = lines === 2;
+  return {
+    lines,
+    fontSize: Math.round(size * (twoLines ? 2.4 : 3.2)),
+    lineHeight: Math.round(size * (twoLines ? 1.95 : 2.6)),
+  };
+}
+
+export function dropCapCss(kit = {}, {
+  size = kit.size || 18,
+  firstLetter = 'p.drop-cap::first-letter',
+  paragraph = 'p.drop-cap',
+} = {}) {
+  if (!kit.dropCaps) return '';
+  const { lines, fontSize, lineHeight } = dropCapMetrics(kit, size);
+  const roles = kitFontRoles(kit);
+  const color = kit.dropCapColor || kit.accent || '#7c3aed';
+  return `${firstLetter} { float: left; font-family: ${roles.title}; color: ${color}; padding-right: 6px; padding-top: 2px; }
+    @supports (initial-letter: 2) { ${firstLetter} { initial-letter: ${lines}; } }
+    @supports not (initial-letter: 2) { ${firstLetter} { font-size: ${fontSize}px; line-height: ${lineHeight}px; } }
+    ${paragraph} { text-indent: 0; }`;
+}
+
 // Escapes text for use inside a CSS generated-content string, e.g.
 // content: "..."  — needed for the header-title margin box below, since the
 // book title is arbitrary user text that could itself contain quotes.
 const escapeCssString = (v = '') => String(v).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 
 function paragraphFontRules(html = '', scoped) {
-  const families = new Set();
-  for (const match of String(html).matchAll(/data-font-family="([^"]+)"/g)) {
+  const fontStyles = new Set();
+  for (const match of String(html).matchAll(/<div\b[^>]*data-font-family="([^"]+)"[^>]*>/g)) {
     const family = match[1]
       .replace(/&quot;/g, '"')
       .replace(/&#39;|&apos;/g, "'")
       .replace(/&lt;/g, '<')
       .replace(/&gt;/g, '>')
       .replace(/&amp;/g, '&');
-    if (family.trim()) families.add(family);
+    const size = (match[0].match(/\bdata-font-size="(\d+(?:\.\d+)?(?:px|pt|em|rem|%)?)"/) || [])[1];
+    if (family.trim()) fontStyles.add(JSON.stringify({ family, size }));
   }
-  return [...families]
-    .map(family => {
+  return [...fontStyles]
+    .map(value => {
+      const { family, size } = JSON.parse(value);
       const catalogStack = FONT_CATALOG.find(font => font.name.toLowerCase() === family.toLowerCase())?.stack;
       const stack = catalogStack || systemFontStack(family) || `"${escapeCssString(family)}", Georgia, serif`;
-      return `${scoped(`[data-font-family="${escapeCssString(family)}"]`)} { font-family: ${stack}; }`;
+      const selector = scoped(`[data-font-family="${escapeCssString(family)}"]${size ? `[data-font-size="${size}"]` : ''}`);
+      return `${selector} { font-family: ${stack};${size ? ` font-size: ${size};` : ''} }`;
     })
     .join('\n');
 }
@@ -96,6 +124,7 @@ export function createBookStyles(kit = {}, options = {}) {
   const subtitleInk = kit.subtitleInk || ink;
   const paper = kit.paper || '#fbf9f4';
   const accent = kit.accent || '#7c3aed';
+  const columnCount = kit.columnCount === 2 ? 2 : 1;
   const contentSelector = options.scope || 'body';
   // `scope` may be a comma-separated list — the live preview passes
   // '.book-preview, .pagedjs_page_content' so one stylesheet covers both the
@@ -123,10 +152,11 @@ export function createBookStyles(kit = {}, options = {}) {
   // whether that class renders as anything. Off by default, same as
   // chapterBreaks: a workbook or lead magnet doesn't want the literary-novel
   // look any more than it wants forced chapter pages.
-  const dropCapRule = kit.dropCaps
-    ? `${scoped('p.drop-cap::first-letter')} { float: left; font-family: ${roles.title}; color: ${accent}; font-size: ${Math.round(size * 3.2)}px; line-height: ${Math.round(size * 2.6)}px; padding-right: 6px; padding-top: 2px; }
-    ${scoped('p.drop-cap')} { text-indent: 0; }`
-    : '';
+  const dropCapRule = dropCapCss(kit, {
+    size,
+    firstLetter: scoped('p.drop-cap::first-letter'),
+    paragraph: scoped('p.drop-cap'),
+  });
   // Running-head data source: h1 feeds `chapter-title` on every chapter,
   // regardless of the active header mode (string() resolves at page time,
   // so the value must exist even if the mode changes between preview and
@@ -198,9 +228,9 @@ export function createBookStyles(kit = {}, options = {}) {
     ${kit.fontFaceCss || ''}
     @page { size: ${pageSizeCss(kit, scale)}; margin: ${margin}pt; ${footerRule} ${headerRule} ${bleedBoxes} }
     :root { --book-ink: ${ink}; --book-paper: ${paper}; --book-accent: ${accent}; --book-font: ${font}; --book-size: ${size}px; --book-line: ${lineHeight}; --book-title-font: ${roles.title}; --book-subtitle-font: ${roles.subtitle}; --book-title-ink: ${titleInk}; --book-subtitle-ink: ${subtitleInk}; }
-    ${contentSelector} { margin: 0; color: var(--book-ink); background: var(--book-paper); font: var(--book-size)/var(--book-line) var(--book-font); }
-    ${scoped('h1')} { font-family: var(--book-title-font); color: var(--book-title-ink); font-size: ${titleSize}px; break-after: avoid; }
-    ${scoped('h2')} { font-family: var(--book-subtitle-font); color: var(--book-subtitle-ink); font-size: ${subtitleSize}px; break-after: avoid; }
+    ${contentSelector} { margin: 0; color: var(--book-ink); background: var(--book-paper); font: var(--book-size)/var(--book-line) var(--book-font); column-count: ${columnCount}; column-gap: 2em; }
+    ${scoped('h1')} { font-family: var(--book-title-font); color: var(--book-title-ink); font-size: ${titleSize}px; break-after: avoid; ${columnCount === 2 ? 'column-span: all;' : ''} }
+    ${scoped('h2')} { font-family: var(--book-subtitle-font); color: var(--book-subtitle-ink); font-size: ${subtitleSize}px; break-after: avoid; ${columnCount === 2 ? 'column-span: all;' : ''} }
     ${scoped('h3, h4, h5, h6')} { break-after: avoid; }
     ${chapterBreakRule}
     ${chapterHeadRule}

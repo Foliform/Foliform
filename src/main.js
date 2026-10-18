@@ -3,7 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 import started from 'electron-squirrel-startup';
 import Database from 'better-sqlite3';
-import { createBookStyles } from './bookStyles';
+import { createBookStyles, dropCapCss, kitFontRoles } from './bookStyles';
 import { findBookSize, pageSizeInches } from './bookSizes';
 
 if (started) app.quit();
@@ -69,7 +69,11 @@ const mediaTypeFor = file => ({
 const makeEpub = async p => {
   const title = esc(p.title);
   const author = esc(p.metadata?.author || 'Unknown author');
-  const bookCss = `body{font:${p.kit.size || 18}px/1.62 ${p.kit.font || 'serif'};color:${p.kit.ink};background:${p.kit.paper}}\n${p.kit.fontFaceCss || ''}`;
+  const roles = kitFontRoles(p.kit);
+  const columnCount = p.kit.columnCount === 2 ? 2 : 1;
+  const size = p.kit.size || 18;
+  const dropCaps = dropCapCss(p.kit, { size, firstLetter: '.drop-cap::first-letter', paragraph: '.drop-cap' });
+  const bookCss = `body{font:${size}px/${p.kit.lineHeight || 1.62} ${roles.body};color:${p.kit.ink || '#1a1917'};background:${p.kit.paper || '#fbf9f4'};column-count:${columnCount};column-gap:2em}body h1,body h2{${columnCount === 2 ? 'column-span:all;' : ''}}${dropCaps}\n${p.kit.fontFaceCss || ''}`;
   const references = new Set([...scanAssetReferences(p.html), ...scanAssetReferences(bookCss)]);
   const assetEntries = [];
   const manifestExtras = [];
@@ -105,6 +109,7 @@ async function copyAssetsNextTo(root, filePath) {
 
 let mainWindow = null;
 let templateManagerWindow = null;
+let activeTheme = 'dark';
 const appIconPath = app.isPackaged
   ? path.join(process.resourcesPath, 'assets', 'app-icon.png')
   : path.join(__dirname, '../../assets/app-icon.png');
@@ -125,16 +130,30 @@ const createWindow = () => {
 // templates appended — renderer.jsx checks that query param at startup and
 // renders the Template Manager UI instead of the normal app shell. Same
 // window-management robustness, none of the extra build-tooling risk.
-const openTemplateManagerWindow = () => {
-  if (templateManagerWindow && !templateManagerWindow.isDestroyed()) { templateManagerWindow.focus(); return; }
-  const win = new BrowserWindow({ width: 960, height: 720, minWidth: 720, minHeight: 560, backgroundColor: '#0e0f12', icon: appIconPath, parent: mainWindow || undefined, webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false } });
-  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) win.loadURL(`${MAIN_WINDOW_VITE_DEV_SERVER_URL}?window=templates`);
-  else win.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`), { search: '?window=templates' });
+const openTemplateManagerWindow = theme => {
+  activeTheme = theme === 'light' ? 'light' : 'dark';
+  if (templateManagerWindow && !templateManagerWindow.isDestroyed()) {
+    templateManagerWindow.webContents.send('theme:changed', activeTheme);
+    templateManagerWindow.focus();
+    return;
+  }
+  const backgroundColor = activeTheme === 'light' ? '#eef0f4' : '#0e0f12';
+  const win = new BrowserWindow({ width: 960, height: 720, minWidth: 720, minHeight: 560, backgroundColor, icon: appIconPath, parent: mainWindow || undefined, webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false } });
+  const search = `?window=templates&theme=${activeTheme}`;
+  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) win.loadURL(`${MAIN_WINDOW_VITE_DEV_SERVER_URL}${search}`);
+  else win.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`), { search });
   templateManagerWindow = win;
   win.on('closed', () => { if (templateManagerWindow === win) templateManagerWindow = null; });
 };
 
-ipcMain.handle('window:openTemplateManager', () => openTemplateManagerWindow());
+ipcMain.handle('window:openTemplateManager', (_, theme) => openTemplateManagerWindow(theme || activeTheme));
+ipcMain.on('theme:changed', (event, theme) => {
+  if (event.sender !== mainWindow?.webContents || !['dark', 'light'].includes(theme)) return;
+  activeTheme = theme;
+  if (templateManagerWindow && !templateManagerWindow.isDestroyed()) {
+    templateManagerWindow.webContents.send('theme:changed', activeTheme);
+  }
+});
 
 const recoveryInterval = 60_000;
 const lastRecoverySnapshot = new Map();

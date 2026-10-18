@@ -33,7 +33,7 @@ const DIVIDER_MARKER = '<hr data-manuscript-divider="true">';
 // another isn't supported — supporting it would mean a real block parser
 // instead of this line-based pass.
 const FENCE_OPEN = /^:::\s*(pullquote|epigraph|left|center|right|justify)\s*$/i;
-const FONT_FENCE_OPEN = /^:::\s*font\s+"([^"\r\n]+)"\s*$/i;
+const FONT_FENCE_OPEN = /^:::\s*font\s+"([^"\r\n]+)"(?:\s+(\d+(?:\.\d+)?)(px|pt|em|rem|%)?)?\s*$/i;
 const FENCE_CLOSE = /^:::\s*$/;
 
 // Plain alignment blocks: `::: center` / `::: left` / `::: right` /
@@ -148,13 +148,20 @@ function extractSpecialBlocks(lines) {
     if (/^\s*```/.test(line)) { inFence = !inFence; output.push(line); continue; }
     if (!inFence) {
       const fontOpen = line.match(FONT_FENCE_OPEN);
-      const open = line.match(FENCE_OPEN) || (fontOpen ? [fontOpen[0], 'font', fontOpen[1].trim()] : null);
+      const open = line.match(FENCE_OPEN) || (fontOpen
+        ? [fontOpen[0], 'font', fontOpen[1].trim(), fontOpen[2], fontOpen[3]]
+        : null);
       if (open) {
         const inner = [];
         let j = i + 1;
         for (; j < lines.length && !FENCE_CLOSE.test(lines[j]); j++) inner.push(lines[j]);
         const token = `\u0000MSBLOCK${index}\u0000`;
-        blocks.set(token, { type: open[1].toLowerCase(), family: open[2], lines: inner });
+        blocks.set(token, {
+          type: open[1].toLowerCase(),
+          family: open[2],
+          size: open[3] && `${open[3]}${open[4] || 'px'}`,
+          lines: inner,
+        });
         index += 1;
         output.push(token);
         i = j; // skip the consumed inner lines and the closing ::: line
@@ -181,10 +188,11 @@ function splitAttribution(lines) {
   return { body, attribution };
 }
 
-function renderSpecialBlock({ type, family, lines }) {
+function renderSpecialBlock({ type, family, size, lines }) {
   if (type === 'font') {
     const escapedFamily = escapeHtmlText(family).replace(/"/g, '&quot;');
-    return `<div class="paragraph-font" data-font-family="${escapedFamily}">${markdownToHtml(lines.join('\n')).trim()}</div>`;
+    const sizeAttribute = size ? ` data-font-size="${size}"` : '';
+    return `<div class="paragraph-font" data-font-family="${escapedFamily}"${sizeAttribute}>${markdownToHtml(lines.join('\n')).trim()}</div>`;
   }
   if (ALIGN_TYPES.has(type)) {
     // Not necessarily a quote, so no attribution line is stripped here —
@@ -243,13 +251,10 @@ function markdownToHtml(source) {
   return html;
 }
 
-// The first paragraph of the book, and the first paragraph of every chapter
-// (every H1), gets `class="drop-cap"` — a structural fact about the document,
-// independent of whether the current Brand Kit actually renders one.
-// bookStyles.js's `dropCaps` kit toggle decides whether that class does
-// anything visually, the same way `chapterBreaks` decides whether an H1
-// actually forces a page break; canonical.js only marks where a chapter
-// *could* start one, so switching the toggle needs no re-authoring.
+// The first paragraph of the book and after every chapter H1 are eligible for
+// a drop cap. The caller can strip those markers when the current style has
+// drop caps disabled, keeping previews and exported HTML in sync with the
+// setting without changing the manuscript source.
 function markDropCaps(document) {
   let expectDropCap = true;
   for (const node of Array.from(document.body.children)) {
@@ -299,11 +304,11 @@ function markBlockquoteAttributions(document) {
  * Comments are translated before DOMPurify because the HTML input's page-break
  * syntax is a comment and comments are intentionally removed during sanitizing.
  */
-function normalizeHtml(source) {
+function normalizeHtml(source, { dropCaps = true } = {}) {
   const withBreaks = source.replace(/<!--\s*page-break\s*-->/gi, BREAK_MARKER);
   const clean = DOMPurify.sanitize(withBreaks, {
     ALLOWED_TAGS: ['p', 'br', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'em', 'strong', 'a', 'img', 'ul', 'ol', 'li', 'hr', 'div', 'span', 'figure', 'figcaption', 'aside', 'cite', 'footer', 'code', 'pre', 'table', 'thead', 'tbody', 'tfoot', 'tr', 'td', 'th'],
-    ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'colspan', 'rowspan', 'width', 'height', 'data-manuscript-page-break', 'data-manuscript-divider', 'data-font-family'],
+    ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'colspan', 'rowspan', 'width', 'height', 'data-manuscript-page-break', 'data-manuscript-divider', 'data-font-family', 'data-font-size'],
   });
   if (typeof DOMParser === 'undefined') {
     return clean
@@ -318,18 +323,19 @@ function normalizeHtml(source) {
   document.querySelectorAll('hr').forEach((node) => node.setAttribute('data-manuscript-divider', 'true'));
   markDropCaps(document);
   markBlockquoteAttributions(document);
+  if (!dropCaps) document.querySelectorAll('.drop-cap').forEach(node => node.classList.remove('drop-cap'));
   return document.body.innerHTML;
 }
 
-export function toCanonicalHtml(source) {
-  return normalizeHtml(markdownToHtml(source));
+export function toCanonicalHtml(source, options) {
+  return normalizeHtml(markdownToHtml(source), options);
 }
 
 export const canonicalContract = {
   pageBreak: '<div class="page-break" data-manuscript-page-break="true"></div>',
   divider: '<hr data-manuscript-divider="true">',
-  // Structural markers introduced above. bookStyles.js reads these class/tag
-  // names when it decides how (or whether) to render each feature.
+  // Structural markers introduced above. Drop-cap markers are included only
+  // when the active style enables them; bookStyles.js provides their styling.
   dropCapClass: 'drop-cap',
   pullquoteClass: 'pullquote',
   epigraphClass: 'epigraph',

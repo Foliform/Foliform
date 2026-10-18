@@ -10,6 +10,7 @@ const BLANK = {
   font: '', googleFont: '', titleSize: 34, subtitleSize: 20, size: 18, margin: 52,
   paper: '#fbf9f4', ink: '#1a1917', accent: '#7c3aed',
   pageSizeId: 'a4', pageWidthMm: 210, pageHeightMm: 297, chapterBreaks: false,
+  columnCount: 1, dropCaps: false, dropCapLines: 3,
 };
 const familyOf = stack => String(stack || '').split(',')[0].replace(/["']/g, '').trim();
 
@@ -19,6 +20,7 @@ const familyOf = stack => String(stack || '').split(',')[0].replace(/["']/g, '')
 // templates; the four built-in kits are fixed and not editable here, though
 // they still show up alongside these in the main window's Template picker.
 export function TemplateManagerWindow() {
+  const [theme, setTheme] = useState(() => new URLSearchParams(window.location.search).get('theme') === 'light' ? 'light' : 'dark');
   const [templates, setTemplates] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [name, setName] = useState('');
@@ -28,9 +30,18 @@ export function TemplateManagerWindow() {
 
   const refresh = () => window.manuscript?.listTemplates().then(list => setTemplates(list || [])).catch(() => {});
   useEffect(() => {
-    document.documentElement.dataset.fpTheme = 'dark';
-    document.body.dataset.fpTheme = 'dark';
+    const applyTheme = nextTheme => {
+      const resolvedTheme = nextTheme === 'light' ? 'light' : 'dark';
+      setTheme(resolvedTheme);
+      document.documentElement.classList.toggle('theme-light', resolvedTheme === 'light');
+      document.body.classList.toggle('theme-light', resolvedTheme === 'light');
+      document.documentElement.dataset.fpTheme = resolvedTheme;
+      document.body.dataset.fpTheme = resolvedTheme;
+    };
+    applyTheme(theme);
+    const unsubscribe = window.manuscript?.onThemeChange(applyTheme);
     refresh();
+    return unsubscribe;
   }, []);
 
   const selectTemplate = template => {
@@ -78,10 +89,10 @@ export function TemplateManagerWindow() {
     refresh();
   };
 
-  return <div className="template-manager">
+  return <div className={`template-manager theme-${theme}`}>
     <header className="template-manager-header">
       <h1>Templates</h1>
-      <p className="muted">Reusable style presets — fonts, sizes, colors, page size — applied from the Template field in any manuscript's Style tab.</p>
+      <p className="muted">Reusable style presets — typography, columns, drop caps, colors, and page setup — applied from the Template field in any manuscript's Style tab.</p>
     </header>
     <div className="template-manager-body">
       <aside className="template-list">
@@ -117,6 +128,19 @@ export function TemplateManagerWindow() {
         <label>Page background</label>
         <ColorPicker value={data.paper} onChange={paper => setData({ ...data, paper })} />
 
+        <label>Text columns</label>
+        <select className="field" value={data.columnCount === 2 ? 2 : 1} onChange={event => setData({ ...data, columnCount: Number(event.target.value) })}>
+          <option value={1}>One column</option>
+          <option value={2}>Two columns</option>
+        </select>
+        <label className="checkbox-row"><input type="checkbox" checked={!!data.dropCaps} onChange={event => setData({ ...data, dropCaps: event.target.checked })} /> Enlarge opening letters (drop caps)</label>
+        <label>Drop-cap height</label>
+        <select className="field" value={data.dropCapLines === 2 ? 2 : 3} disabled={!data.dropCaps} onChange={event => setData({ ...data, dropCapLines: Number(event.target.value) })}>
+          <option value={2}>2 lines</option>
+          <option value={3}>3 lines</option>
+        </select>
+        <label>Drop-cap colour</label>
+        <ColorPicker label="Drop-cap colour" compact value={data.dropCapColor || data.accent} onChange={dropCapColor => setData({ ...data, dropCapColor })} onReset={() => setData({ ...data, dropCapColor: undefined })} />
         <label className="checkbox-row"><input type="checkbox" checked={!!data.chapterBreaks} onChange={event => setData({ ...data, chapterBreaks: event.target.checked })} /> Start every chapter (H1) on a new page</label>
 
         <div className="template-form-actions">

@@ -1,4 +1,4 @@
-import { kitFontRoles } from '../bookStyles';
+import { dropCapMetrics, kitFontRoles } from '../bookStyles';
 import { PdfViewer } from './PdfViewer';
 
 export function PreviewStage({
@@ -19,6 +19,7 @@ export function PreviewStage({
   // (which are styled by index.css rather than the injected @page stylesheet)
   // show the same three fonts, line height, and heading colours the panel sets.
   const roles = kitFontRoles(kit);
+  const dropCap = dropCapMetrics(kit, kit.size);
 
   // Book zoom is applied to the completed page stack after paged.js finishes,
   // so pagination uses the same physical dimensions as PDF export.
@@ -40,7 +41,16 @@ export function PreviewStage({
     '--book-line': kit.lineHeight || 1.62,
     '--type-size': `${kit.size}px`,
     '--book-margin': `${kit.margin}px`,
+    '--book-dropcap-font': roles.title,
+    '--book-dropcap-color': kit.dropCapColor || kit.accent || '#7c3aed',
+    '--book-dropcap-lines': dropCap.lines,
+    '--book-dropcap-size': `${dropCap.fontSize}px`,
+    '--book-dropcap-line-height': `${dropCap.lineHeight}px`,
     ...(paged ? null : { zoom: zoom / 100 }),
+  };
+  const contentStyle = paged ? undefined : {
+    columnCount: kit.columnCount === 2 ? 2 : 1,
+    columnGap: '2em',
   };
   const handlePreviewClick = event => {
     const image = event.target.closest('img');
@@ -62,7 +72,7 @@ export function PreviewStage({
           <>
             <div className="page-pagination-source" aria-hidden="true">
               <div className="paper" style={paperStyle}>
-                <div key="page-source" ref={previewRef} className="book-preview" />
+                <div key="page-source" ref={previewRef} className={`book-preview ${kit.dropCaps ? 'drop-caps' : ''}`} style={contentStyle} />
               </div>
             </div>
             <PdfViewer
@@ -79,7 +89,8 @@ export function PreviewStage({
             <div
               key={mode}
               ref={previewRef}
-              className="book-preview"
+              className={`book-preview ${kit.dropCaps ? 'drop-caps' : ''}`}
+              style={contentStyle}
               onClick={handlePreviewClick}
             />
           </div>

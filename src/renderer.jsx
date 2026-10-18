@@ -18,6 +18,7 @@ import { PreviewStage } from './components/PreviewStage';
 import { Subbar } from './components/Subbar';
 import { Topbar } from './components/Topbar';
 import { TemplateManagerWindow } from './components/TemplateManagerWindow';
+import { templatesEnabled } from './featureFlags';
 import './index.css';
 
 // The live preview renders inside the app's own window, not rooted at the
@@ -143,7 +144,7 @@ function App() {
   const pdfRequestId = useRef(0);
   const pageCount = mode === 'Page' ? pdfPageCount || bookPageCount : bookPageCount;
   const checkText = useSpellcheck();
-  const html = useMemo(() => toCanonicalHtml(source), [source]);
+  const html = useMemo(() => toCanonicalHtml(source, { dropCaps: !!kit.dropCaps }), [source, kit.dropCaps]);
   const headingSections = useMemo(() => {
     if (!html) return [];
     const document = new DOMParser().parseFromString(html, 'text/html');
@@ -193,6 +194,7 @@ function App() {
     document.documentElement.classList.toggle('theme-light', theme === 'light');
     document.documentElement.dataset.fpTheme = theme;
     document.body.dataset.fpTheme = theme;
+    window.manuscript?.setTheme(theme);
   }, [theme]);
 
   useEffect(() => {
@@ -620,8 +622,11 @@ function App() {
       lineHeight: templateData?.lineHeight,
       titleInk: templateData?.titleInk,
       subtitleInk: templateData?.subtitleInk,
+      columnCount: templateData?.columnCount === 2 ? 2 : 1,
       chapterBreaks: !!templateData?.chapterBreaks,
       dropCaps: !!templateData?.dropCaps,
+      dropCapLines: templateData?.dropCapLines === 2 ? 2 : 3,
+      dropCapColor: templateData?.dropCapColor,
       fonts: templateFonts,
       googleFont: undefined,
       fontFaceCss: '',
@@ -680,7 +685,7 @@ function App() {
   if (!projectPath) return <Dashboard showNew={showNew} setShowNew={setShowNew} newTitle={newTitle} setNewTitle={setNewTitle} onOpen={openProject} onCreate={newProject} recentProjects={recentProjects} onOpenRecent={openRecent} theme={theme} onThemeChange={() => setTheme(current => current === 'dark' ? 'light' : 'dark')} />;
 
   return <main className={`app-shell ${activeView.toLowerCase()}-view theme-${theme}`}>
-    <Topbar title={title} notice={notice} words={words} pageCount={pageCount} activeView={activeView} theme={theme} onThemeChange={() => setTheme(current => current === 'dark' ? 'light' : 'dark')} onViewChange={setActiveView} onRename={rename} onNew={newProject} onOpen={openProject} onSave={() => save(false)} onExport={runPreflight} onOpenTemplates={() => window.manuscript?.openTemplateManager()} onRecover={() => setRecoveryOpen(true)} />
+    <Topbar title={title} notice={notice} words={words} pageCount={pageCount} activeView={activeView} theme={theme} onThemeChange={() => setTheme(current => current === 'dark' ? 'light' : 'dark')} onViewChange={setActiveView} onRename={rename} onNew={newProject} onOpen={openProject} onSave={() => save(false)} onExport={runPreflight} onOpenTemplates={() => window.manuscript?.openTemplateManager(theme)} onRecover={() => setRecoveryOpen(true)} />
     <div className="workspace" style={{ '--binder-width': binderCollapsed ? '44px' : '220px', '--editor-width': `${editorWidth}px`, '--inspector-width': inspectorCollapsed ? '44px' : '270px' }}>
       <Binder words={words} sections={sections} activeSection={activeSection} collapsed={binderCollapsed} onToggle={() => setBinderCollapsed(value => !value)} onSelect={selectSection} />
       <EditorPanel source={source} setSource={value => { setSource(value); setNotice('Unsaved changes'); }} pageWarning={pageWarning} checkText={checkText} onFontApply={prepareParagraphFont} />
@@ -700,7 +705,7 @@ function App() {
 // second Vite/Forge renderer target — keeps both windows on identical
 // tooling with no extra build-config surface.
 function Root() {
-  const isTemplateWindow = new URLSearchParams(window.location.search).get('window') === 'templates';
+  const isTemplateWindow = templatesEnabled && new URLSearchParams(window.location.search).get('window') === 'templates';
   return isTemplateWindow ? <TemplateManagerWindow /> : <App />;
 }
 

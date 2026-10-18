@@ -5,6 +5,9 @@ description: Apply Foliform's built-in styles or create and manage reusable temp
 
 # Templates and styles
 
+Template selection and management are temporarily unavailable in the app.
+Existing saved templates are not deleted.
+
 Templates give you a repeatable starting point for a book's typography and
 page design. Foliform includes built-in styles and lets you save your own
 custom templates.

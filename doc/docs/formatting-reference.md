@@ -137,23 +137,43 @@ For everyone who kept reading.
 Available alignment names are `left`, `center`, `right`, and `justify`. These
 blocks do not turn a trailing dash line into a quote attribution.
 
-## Font for a paragraph
+## Columns and drop caps
+
+Set the book-wide text layout in the **Style** tab of the inspector. Choose
+**Two columns** to flow the manuscript in two columns, with chapter and section
+headings spanning both. Choose **One column** to return to a single text column.
+
+Enable **Enlarge opening letters (drop caps)** to enlarge the first letter of
+the book and the opening paragraph after each level-one heading. Set **Drop-cap
+height** to two or three lines and choose a **Drop-cap colour**. Reset its
+colour to use the style's accent colour. These are style settings, so they
+apply to the preview and exported editions and can be saved in a template.
+
+## Font and size for a paragraph
 
 Choose a font in the editor's **Paragraph font** picker to apply it to the
-paragraph at the cursor or the paragraphs containing the selection. This
-inserts a font block in the source. The same formatting can be authored
-directly by wrapping the paragraph in `::: font "Font Name"` and a closing
-`:::` fence:
+paragraph at the cursor or the paragraphs containing the selection. The picker
+changes only the font; the paragraph keeps the book's body font size. To set a
+custom size, add it to the font block in the source:
 
 ```markdown
+::: font "Poppins" 20px
+This paragraph uses Poppins at 20 pixels instead of the book's body font size.
+:::
+
+::: font "Georgia" 14pt
+This paragraph uses Georgia at 14 points.
+:::
+
 ::: font "Georgia"
-This paragraph uses Georgia instead of the book's body font.
+This older form changes only the font and keeps the book's body font size.
 :::
 ```
 
-The picker provides Google Fonts and system fonts. Google fonts are embedded
-in the project for preview and export, so save the project before applying
-one. System fonts such as Georgia can be applied before saving.
+Sizes accept `px`, `pt`, `em`, `rem`, or `%`; a unitless size is interpreted as
+pixels. The picker provides Google Fonts and system fonts. Google fonts are
+embedded in the project for preview and export, so save the project before
+applying one. System fonts such as Georgia can be applied before saving.
 
 ## Page breaks and decorative dividers
 

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { BOOK_SIZES, findBookSize } from '../bookSizes';
 import { kits } from '../builtinKits';
 import { kitFontRoles } from '../bookStyles';
+import { templatesEnabled } from '../featureFlags';
 import { findFontNote } from '../fontCatalog';
 import ColorPicker from './ColorPicker';
 import Combobox from './Combobox';
@@ -44,7 +45,10 @@ export function Inspector({ tab, setTab, kit, setKit, onApplyTemplate, setPageSi
   const lineHeight = kit.lineHeight || 1.62;
   const imageForEdit = selectedImage || recentImage;
 
-  const refreshTemplates = () => window.manuscript?.listTemplates().then(list => { if (list) setTemplates(list); }).catch(() => {});
+  const refreshTemplates = () => {
+    if (!templatesEnabled) return;
+    window.manuscript?.listTemplates().then(list => { if (list) setTemplates(list); }).catch(() => {});
+  };
   useEffect(() => {
     refreshTemplates();
     // The Template Manager is a separate OS window — picking this window
@@ -70,9 +74,11 @@ export function Inspector({ tab, setTab, kit, setKit, onApplyTemplate, setPageSi
     <div className="inspector-tabs"><button className="panel-toggle" aria-label={collapsed ? 'Open inspector' : 'Collapse inspector'} onClick={onToggle}>{collapsed ? '‹' : '›'}</button>{!collapsed && ['Style', 'Metadata', 'Assets'].map(item => <button className={tab === item ? 'active-tab' : ''} onClick={() => setTab(item)} key={item}>{item}</button>)}</div>
     {!collapsed && <>
       {tab === 'Style' && <div className="inspector-body"><h2>Document style</h2>
-        <label htmlFor="template-field">Template</label>
-        <Combobox id="template-field" label="Template" value={templateQuery} options={templateNames} placeholder="Search templates…" onSelect={handleTemplateInput} />
-        <small className="muted">Applying a template replaces the fonts, colors, and margins below. Manage templates from the Templates button in the header.</small>
+        {templatesEnabled && <>
+          <label htmlFor="template-field">Template</label>
+          <Combobox id="template-field" label="Template" value={templateQuery} options={templateNames} placeholder="Search templates…" onSelect={handleTemplateInput} />
+          <small className="muted">Applying a template replaces the fonts, colors, and margins below. Manage templates from the Templates button in the header.</small>
+        </>}
 
         <SectionHead glyph="Aa" title="Font families" action={<button className="section-action" onClick={onRemix} title="Pick a new title/body pairing"><span aria-hidden="true">⟳</span> Remix fonts</button>} />
         {FONT_ROLES.map(({ role, label }) => <div className="font-row" key={role}>
@@ -110,6 +116,19 @@ export function Inspector({ tab, setTab, kit, setKit, onApplyTemplate, setPageSi
         <small className="muted">{(() => { const s = findBookSize(kit.pageSizeId || 'a4'); return `${s.widthMm} × ${s.heightMm} mm`; })()}</small>
         <label>Page margins <span>{kit.margin} pt</span></label>
         <input type="range" min="32" max="76" value={kit.margin} onChange={event => setKit({ ...kit, margin: Number(event.target.value) })} />
+        <label>Text columns</label>
+        <select className="field" value={kit.columnCount === 2 ? 2 : 1} onChange={event => setKit({ ...kit, columnCount: Number(event.target.value) })}>
+          <option value={1}>One column</option>
+          <option value={2}>Two columns</option>
+        </select>
+        <label className="checkbox-row"><input type="checkbox" checked={!!kit.dropCaps} onChange={event => setKit({ ...kit, dropCaps: event.target.checked })} /> Enlarge opening letters (drop caps)</label>
+        <label>Drop-cap height</label>
+        <select className="field" value={kit.dropCapLines === 2 ? 2 : 3} disabled={!kit.dropCaps} onChange={event => setKit({ ...kit, dropCapLines: Number(event.target.value) })}>
+          <option value={2}>2 lines</option>
+          <option value={3}>3 lines</option>
+        </select>
+        <label>Drop-cap colour</label>
+        <ColorPicker label="Drop-cap colour" compact value={kit.dropCapColor || kit.accent} onChange={dropCapColor => setKit({ ...kit, dropCapColor })} onReset={() => setKit({ ...kit, dropCapColor: undefined })} />
         <label className="checkbox-row"><input type="checkbox" checked={!!kit.chapterBreaks} onChange={event => setKit({ ...kit, chapterBreaks: event.target.checked })} /> Start every chapter (H1) on a new page</label>
       </div>}
       {tab === 'Metadata' && <div className="inspector-body"><h2>Publishing details</h2><label>Book title</label><input className="field" value={title} onChange={event => setTitle(event.target.value)} /><label>Author</label><input className="field" value={metadata.author || ''} onChange={event => setMetadata({ ...metadata, author: event.target.value })} /><label>Language</label><input className="field" value={metadata.language || ''} onChange={event => setMetadata({ ...metadata, language: event.target.value })} /><label>Page numbering</label><select className="field" value={metadata.pageNumbers || 'off'} onChange={event => setMetadata({ ...metadata, pageNumbers: event.target.value })}><option value="off">None</option><option value="plain">Page number</option><option value="total">Page number of total (3 / 24)</option></select><label>Running header</label><select className="field" value={metadata.runningHead || 'off'} onChange={event => setMetadata({ ...metadata, runningHead: event.target.value })}><option value="off">None</option><option value="title">Book title</option><option value="chapter">Current chapter title</option></select><small className="muted">Applies to every page, including the first. Same for the live preview and every export.</small></div>}

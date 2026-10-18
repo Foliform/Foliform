@@ -113,6 +113,30 @@ html.theme-light{
     color:var(--ink);
     font:var(--type-size)/var(--book-line,1.62) var(--bookfont)
 }
+.book-preview h1,.book-preview h2{
+    column-span:all
+}
+.book-preview.drop-caps p.drop-cap::first-letter{
+    float:left;
+    font-family:var(--book-dropcap-font);
+    color:var(--book-dropcap-color);
+    padding-right:6px;
+    padding-top:2px
+}
+@supports (initial-letter: 2){
+    .book-preview.drop-caps p.drop-cap::first-letter{
+        initial-letter:var(--book-dropcap-lines)
+    }
+}
+@supports not (initial-letter: 2){
+    .book-preview.drop-caps p.drop-cap::first-letter{
+        font-size:var(--book-dropcap-size);
+        line-height:var(--book-dropcap-line-height)
+    }
+}
+.book-preview.drop-caps p.drop-cap{
+    text-indent:0
+}
  .preview-stage{
     flex-direction:column!important;
     align-items:stretch!important;
@@ -387,6 +411,10 @@ html.theme-light{
     background:#f0f2f6;
     color:#8991a1
 }
+ .theme-light .editor-canvas .cm-activeLineGutter{
+    background:#e8e3f5;
+    color:#543995
+}
  .theme-light textarea{
     background:#ffffff;
     color:#303541
@@ -437,6 +465,9 @@ html.theme-light{
     height:100%;
     font:12px/22px ui-monospace,SFMono-Regular,Consolas,monospace
 }
+ .editor-canvas .cm-editor .cm-line{
+    line-height:22px
+}
  .editor-canvas .cm-scroller{
     overflow:auto;
     padding:0
@@ -456,7 +487,17 @@ html.theme-light{
     background:#0c0d10;
     border:0;
     color:#4d4b55;
-    padding-top:14px
+}
+ .editor-canvas .cm-lineNumbers .cm-gutterElement{
+    min-width:36px;
+    padding:0 8px 0 4px;
+    text-align:right;
+    font:11px/22px ui-monospace,SFMono-Regular,Consolas,monospace;
+    font-variant-numeric:tabular-nums
+}
+ .editor-canvas .cm-activeLineGutter{
+    background:#1a1c24;
+    color:#d7c4ff
 }
  .title-button{
     border:0;
@@ -531,6 +572,12 @@ html.theme-light{
 .template-row h2{
     font:400 23px 'EB Garamond',serif
 }
+.recent-grid{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:stretch;
+    gap:16px
+}
 .template-card{
     width:225px;
     background:#17191f;
@@ -538,6 +585,13 @@ html.theme-light{
     border-radius:8px;
     padding:12px;
     cursor:pointer
+}
+.recent-grid .recent-card{
+    flex:0 1 225px;
+    min-width:0
+}
+.recent-card b{
+    overflow-wrap:anywhere
 }
 .template-card:hover{
     border-color:#8b5cf6
@@ -1658,7 +1712,9 @@ footer{
     height:100vh;
     padding:24px 28px;
     box-sizing:border-box;
-    gap:20px
+    gap:20px;
+    background:#0e0f12;
+    color:#e2e2e9
 }
 .template-manager-header h1{
     margin:0 0 6px;
@@ -1735,6 +1791,45 @@ footer{
 }
 .muted.small{
     font-size:12px
+}
+.template-manager.theme-light{
+    background:#eef0f4;
+    color:#252832
+}
+.theme-light .template-manager-header .muted{
+    color:#596171
+}
+.theme-light .template-list,.theme-light .template-form{
+    background:#fff;
+    border-color:#d5dae3
+}
+.theme-light .template-list-item{
+    color:#303541
+}
+.theme-light .template-list-item:hover,.theme-light .template-list-item.active{
+    background:#f1effb
+}
+.theme-light .template-list-item.active{
+    border-color:#7040d6
+}
+.theme-light .template-list-item small{
+    color:#697386
+}
+.theme-light .template-form label{
+    color:#596171
+}
+.theme-light .template-form .field{
+    background:#fff;
+    border-color:#cbd1dc;
+    color:#303541
+}
+.theme-light .template-form .muted{
+    color:#697386
+}
+.theme-light .template-form-actions button:not(.primary){
+    background:#f7f8fa;
+    border-color:#d5dae3;
+    color:#303541
 }
 
 .color-picker {
