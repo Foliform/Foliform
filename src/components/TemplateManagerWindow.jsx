@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BOOK_SIZES, findBookSize } from '../bookSizes';
 import { findFont } from '../fontCatalog';
-import { fontStack } from '../bookStyles';
+import { fontStack, normalizeColumnCount } from '../bookStyles';
 import ColorPicker from './ColorPicker';
 import Combobox from './Combobox';
 import { FontPickerControl } from './FontPickerControl';
@@ -129,9 +129,10 @@ export function TemplateManagerWindow() {
         <ColorPicker value={data.paper} onChange={paper => setData({ ...data, paper })} />
 
         <label>Text columns</label>
-        <select className="field" value={data.columnCount === 2 ? 2 : 1} onChange={event => setData({ ...data, columnCount: Number(event.target.value) })}>
+        <select className="field" value={normalizeColumnCount(data.columnCount)} onChange={event => setData({ ...data, columnCount: Number(event.target.value) })}>
           <option value={1}>One column</option>
           <option value={2}>Two columns</option>
+          <option value={3}>Three columns</option>
         </select>
         <label className="checkbox-row"><input type="checkbox" checked={!!data.dropCaps} onChange={event => setData({ ...data, dropCaps: event.target.checked })} /> Enlarge opening letters (drop caps)</label>
         <label>Drop-cap height</label>

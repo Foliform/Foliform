@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { BOOK_SIZES, findBookSize } from '../bookSizes';
 import { kits } from '../builtinKits';
-import { kitFontRoles } from '../bookStyles';
+import { kitFontRoles, normalizeColumnCount } from '../bookStyles';
 import { templatesEnabled } from '../featureFlags';
 import { findFontNote } from '../fontCatalog';
 import ColorPicker from './ColorPicker';
@@ -24,7 +24,7 @@ function SectionHead({ glyph, title, action }) {
   return <div className="inspector-section"><span className="section-glyph" aria-hidden="true">{glyph}</span><h3>{title}</h3>{action}</div>;
 }
 
-export function Inspector({ tab, setTab, kit, setKit, onApplyTemplate, setPageSize, metadata, setMetadata, title, setTitle, onImport, recentImage, selectedImage, onImageResize, onFontLoad, onFontAll, onRemix, collapsed, onToggle }) {
+export function Inspector({ tab, setTab, kit, setKit, onApplyTemplate, setPageSize, metadata, setMetadata, title, setTitle, onImport, recentImage, selectedImage, onImageResize, onFontLoad, onFontAll, onRemix, collapsed, onToggle, localColumnsOnly = false }) {
   const [templates, setTemplates] = useState([]);
   const [templateQuery, setTemplateQuery] = useState('');
   // Built-in kits and saved templates (from the Template Manager window,
@@ -117,10 +117,12 @@ export function Inspector({ tab, setTab, kit, setKit, onApplyTemplate, setPageSi
         <label>Page margins <span>{kit.margin} pt</span></label>
         <input type="range" min="32" max="76" value={kit.margin} onChange={event => setKit({ ...kit, margin: Number(event.target.value) })} />
         <label>Text columns</label>
-        <select className="field" value={kit.columnCount === 2 ? 2 : 1} onChange={event => setKit({ ...kit, columnCount: Number(event.target.value) })}>
+        <select className="field" value={normalizeColumnCount(kit.columnCount)} disabled={localColumnsOnly} onChange={event => setKit({ ...kit, columnCount: Number(event.target.value) })}>
           <option value={1}>One column</option>
           <option value={2}>Two columns</option>
+          <option value={3}>Three columns</option>
         </select>
+        {localColumnsOnly && <small className="muted">Local columns are in use; surrounding text stays in one column. Use More → Whole-book columns to apply columns to the whole manuscript.</small>}
         <label className="checkbox-row"><input type="checkbox" checked={!!kit.dropCaps} onChange={event => setKit({ ...kit, dropCaps: event.target.checked })} /> Enlarge opening letters (drop caps)</label>
         <label>Drop-cap height</label>
         <select className="field" value={kit.dropCapLines === 2 ? 2 : 3} disabled={!kit.dropCaps} onChange={event => setKit({ ...kit, dropCapLines: Number(event.target.value) })}>

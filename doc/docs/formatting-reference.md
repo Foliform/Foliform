@@ -139,9 +139,38 @@ blocks do not turn a trailing dash line into a quote attribution.
 
 ## Columns and drop caps
 
-Set the book-wide text layout in the **Style** tab of the inspector. Choose
-**Two columns** to flow the manuscript in two columns, with chapter and section
-headings spanning both. Choose **One column** to return to a single text column.
+Set the default book-wide text layout in the **Style** tab of the inspector.
+Choose **One column**, **Two columns**, or **Three columns** to flow the
+manuscript into that many columns, with chapter and section headings spanning
+them. The **More → Whole-book columns** editor menu inserts a document setting
+such as `::: columns 2`; this setting overrides the Style tab and is included
+in preview and exports. Choose **Use Style setting** in that menu to remove
+the document setting and follow the Style tab again.
+
+For specific side-by-side content, use a columns block with one `:::column`
+section per column:
+
+```markdown
+::: columns
+:::column
+Left-hand content
+:::
+
+:::column
+Right-hand content
+:::
+:::
+```
+
+Each section supports regular Markdown. Its content stays in its own column;
+it does not flow into the next column. When a local columns block is used,
+content outside local blocks stays single-column, regardless of the Text
+columns setting in Style. To apply columns to all the other content too, add
+a whole-book setting such as `::: columns 2` at the top of the manuscript.
+An explicit whole-book setting takes precedence outside the local blocks.
+
+The sample project [columns-demo.md](../../samples/columns-demo.md) shows this
+syntax in a complete manuscript.
 
 Enable **Enlarge opening letters (drop caps)** to enlarge the first letter of
 the book and the opening paragraph after each level-one heading. Set **Drop-cap

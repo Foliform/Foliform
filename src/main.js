@@ -3,8 +3,9 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 import started from 'electron-squirrel-startup';
 import Database from 'better-sqlite3';
-import { createBookStyles, dropCapCss, kitFontRoles } from './bookStyles';
-import { findBookSize, pageSizeInches } from './bookSizes';
+import { createBookStyles, dropCapCss, kitFontRoles, normalizeColumnCount } from './bookStyles';
+import { pageSizeInches } from './bookSizes';
+import { createPdfProject } from './pdfProject';
 
 if (started) app.quit();
 app.setName('Foliform');
@@ -70,10 +71,10 @@ const makeEpub = async p => {
   const title = esc(p.title);
   const author = esc(p.metadata?.author || 'Unknown author');
   const roles = kitFontRoles(p.kit);
-  const columnCount = p.kit.columnCount === 2 ? 2 : 1;
+  const columnCount = normalizeColumnCount(p.kit.columnCount);
   const size = p.kit.size || 18;
   const dropCaps = dropCapCss(p.kit, { size, firstLetter: '.drop-cap::first-letter', paragraph: '.drop-cap' });
-  const bookCss = `body{font:${size}px/${p.kit.lineHeight || 1.62} ${roles.body};color:${p.kit.ink || '#1a1917'};background:${p.kit.paper || '#fbf9f4'};column-count:${columnCount};column-gap:2em}body h1,body h2{${columnCount === 2 ? 'column-span:all;' : ''}}${dropCaps}\n${p.kit.fontFaceCss || ''}`;
+  const bookCss = `body{font:${size}px/${p.kit.lineHeight || 1.62} ${roles.body};color:${p.kit.ink || '#1a1917'};background:${p.kit.paper || '#fbf9f4'};column-count:${columnCount};column-gap:2em}body h1,body h2{${columnCount > 1 ? 'column-span:all;' : ''}}.manuscript-columns{display:flex;column-span:all;gap:2em;align-items:flex-start}.manuscript-column{flex:1 1 0;min-width:0}${dropCaps}\n${p.kit.fontFaceCss || ''}`;
   const references = new Set([...scanAssetReferences(p.html), ...scanAssetReferences(bookCss)]);
   const assetEntries = [];
   const manifestExtras = [];
@@ -264,6 +265,10 @@ ipcMain.handle('project:openPath', async (_, root) => {
 });
 
 ipcMain.handle('project:list', () => db.prepare('SELECT path, title, format, last_opened as lastOpened FROM recent_projects ORDER BY last_opened DESC LIMIT 20').all());
+ipcMain.handle('project:removeRecent', (_, projectPath) => {
+  db.prepare('DELETE FROM recent_projects WHERE path = ?').run(projectPath);
+  return true;
+});
 
 ipcMain.handle('project:recovery:list', async (_, root) => {
   if (!root) return [];
@@ -389,24 +394,6 @@ ipcMain.handle('font:import', async (_, { root, family }) => {
 
 // --- Export. Each format resolves the manuscript's own "assets/..." relative
 // paths a different way, matched to what that output actually is: ---
-function createPdfProject(p, settings = {}) {
-  const size = findBookSize(settings.pageSizeId || p.kit.pageSizeId || 'a4');
-  const marginMm = Number.isFinite(settings.marginMm)
-    ? Math.min(50, Math.max(0, settings.marginMm))
-    : (Number.isFinite(p.kit.margin) ? p.kit.margin : 52) * 25.4 / 72;
-  const bleedMm = Number.isFinite(settings.bleedMm) ? Math.min(10, Math.max(0, settings.bleedMm)) : 0;
-  return {
-    ...p,
-    kit: {
-      ...p.kit,
-      pageSizeId: size.id,
-      pageWidthMm: size.widthMm + bleedMm * 2,
-      pageHeightMm: size.heightMm + bleedMm * 2,
-      margin: (marginMm + bleedMm) * 72 / 25.4,
-    },
-  };
-}
-
 async function renderPdfBuffer(p, settings = {}) {
   if (!p?.path) throw new Error('A saved manuscript project is required to render its PDF.');
   const pdfProject = createPdfProject(p, settings);

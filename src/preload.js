@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld('manuscript', {
   openProject: () => ipcRenderer.invoke('project:open'),
   openProjectPath: (path) => ipcRenderer.invoke('project:openPath', path),
   listProjects: () => ipcRenderer.invoke('project:list'),
+  removeRecentProject: (path) => ipcRenderer.invoke('project:removeRecent', path),
   saveProject: (project) => ipcRenderer.invoke('project:save', project),
   listRecovery: (path) => ipcRenderer.invoke('project:recovery:list', path),
   getRecovery: (path, id) => ipcRenderer.invoke('project:recovery:get', path, id),

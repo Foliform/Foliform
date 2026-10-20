@@ -1,5 +1,6 @@
-export function Subbar({ mode, setMode, page, pageCount, setPage, zoom, setZoom }) {
+export function Subbar({ mode, setMode, page, pageCount, setPage, zoom, setZoom, tableOfContentsEnabled, canAddTableOfContents, onTableOfContentsChange }) {
   const book = mode === 'Book';
+  const pagedPreview = book || mode === 'Page';
   const left = page % 2 === 0 ? page : page - 1;
   const start = Math.max(1, left);
   const end = Math.min(pageCount, page % 2 === 0 ? page + 1 : page);
@@ -15,6 +16,15 @@ export function Subbar({ mode, setMode, page, pageCount, setPage, zoom, setZoom 
       <button disabled={atEnd} onClick={goNext}>›</button>
     </div>
     <div className="view-tools">
+      {pagedPreview && <button
+        className="toc-preview-toggle"
+        type="button"
+        aria-label={`${tableOfContentsEnabled ? 'Hide' : 'Show'} table of contents in preview`}
+        aria-pressed={tableOfContentsEnabled}
+        title={canAddTableOfContents ? 'Toggle table of contents in preview' : 'Add a heading to enable the table of contents'}
+        disabled={!canAddTableOfContents}
+        onClick={() => onTableOfContentsChange(!tableOfContentsEnabled)}
+      >TOC</button>}
       <button onClick={() => setZoom(Math.max(55, zoom - 5))}>−</button>
       <span>{zoom}%</span>
       <button onClick={() => setZoom(Math.min(115, zoom + 5))}>+</button>

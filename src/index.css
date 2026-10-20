@@ -415,6 +415,14 @@ html.theme-light{
     background:#e8e3f5;
     color:#543995
 }
+ .theme-light .editor-canvas .cm-page-break-line{
+    background:#eee8fb;
+    color:#563b9b
+}
+ .theme-light .editor-canvas .cm-divider-line{
+    background:#fff2d9;
+    color:#805313
+}
  .theme-light textarea{
     background:#ffffff;
     color:#303541
@@ -588,7 +596,53 @@ html.theme-light{
 }
 .recent-grid .recent-card{
     flex:0 1 225px;
-    min-width:0
+    min-width:0;
+    position:relative
+}
+.recent-menu-toggle{
+    position:absolute;
+    top:18px;
+    right:18px;
+    width:30px;
+    height:30px;
+    border:1px solid #d8d4dc;
+    border-radius:5px;
+    background:#fff;
+    color:#292520;
+    font-size:20px;
+    line-height:1;
+    cursor:pointer
+}
+.recent-menu{
+    position:absolute;
+    z-index:2;
+    top:51px;
+    right:18px;
+    min-width:155px;
+    padding:4px;
+    border:1px solid #3a3c47;
+    border-radius:6px;
+    background:#1c1e26;
+    box-shadow:0 8px 20px #0005
+}
+.recent-menu button{
+    width:100%;
+    border:0;
+    border-radius:3px;
+    padding:8px 10px;
+    background:transparent;
+    color:#eeeaf4;
+    text-align:left;
+    font:inherit;
+    font-size:12px;
+    cursor:pointer
+}
+.recent-menu button:hover{
+    background:#342747
+}
+.recent-error{
+    color:#e08b8b;
+    font-size:12px
 }
 .recent-card b{
     overflow-wrap:anywhere
@@ -811,16 +865,6 @@ button{
     border-color:#7c3aed;
     color:white
 }
-.avatar{
-    width:29px;
-    height:29px;
-    border-radius:50%;
-    background:#d2bbff;
-    color:#3f008e;
-    font-size:10px;
-    display:grid;
-    place-items:center
-}
 .icon{
     margin-right:3px
 }
@@ -869,6 +913,15 @@ button{
 }
 .view-tools{
     gap:3px
+}
+.view-tools .toc-preview-toggle[aria-pressed="true"]{
+    background:#2b1c51;
+    border-color:#7953b8;
+    color:#eaddff
+}
+.view-tools .toc-preview-toggle:disabled{
+    cursor:not-allowed;
+    opacity:.5
 }
 .view-tools span{
     padding:0 6px;
@@ -978,7 +1031,7 @@ button{
 }
 .editor-head-tools{
     display:flex;
-    flex:0 1 auto;
+    flex:0 0 auto;
     align-items:center;
     flex-wrap:nowrap;
     gap:2px;
@@ -1012,6 +1065,84 @@ button{
 .editor-head-tools>button[aria-pressed="true"]{
     background:#2b2140;
     color:#d7c4ff
+}
+.editor-options{
+    position:relative
+}
+.editor-options summary{
+    list-style:none;
+    padding:5px 8px;
+    border:1px solid #34313d;
+    border-radius:4px;
+    background:#17181e;
+    color:#bcb6c8;
+    font-size:10px;
+    cursor:pointer
+}
+.editor-options summary::-webkit-details-marker{
+    display:none
+}
+.editor-options[open] summary{
+    border-color:#7953b8;
+    color:#d7c4ff
+}
+.editor-options-menu{
+    position:absolute;
+    z-index:10;
+    top:calc(100% + 6px);
+    right:0;
+    min-width:150px;
+    padding:4px;
+    border:1px solid #34313d;
+    border-radius:5px;
+    background:#17181e;
+    box-shadow:0 6px 18px #0008
+}
+.editor-options-menu button{
+    display:block;
+    width:100%;
+    padding:8px 9px;
+    border:0;
+    border-radius:3px;
+    background:transparent;
+    color:#bcb6c8;
+    text-align:left;
+    font:inherit;
+    font-size:11px;
+    cursor:pointer
+}
+.editor-options-label{
+    display:block;
+    padding:7px 9px 4px;
+    color:#8e8996;
+    font-size:10px
+}
+.editor-options-menu hr{
+    border:0;
+    border-top:1px solid #34313d;
+    margin:4px 2px
+}
+.editor-options-menu button:hover,.editor-options-menu button[aria-pressed="true"]{
+    background:#2b2140;
+    color:#d7c4ff
+}
+.theme-light .editor-options summary,.theme-light .editor-options-menu{
+    background:#fff;
+    border-color:#d9dde5;
+    color:#303541
+}
+.theme-light .editor-options[open] summary,.theme-light .editor-options-menu button:hover,.theme-light .editor-options-menu button[aria-pressed="true"]{
+    background:#eee8fb;
+    color:#563b9b
+}
+.theme-light .editor-options-menu button{
+    color:#303541
+}
+.theme-light .editor-options-label{
+    color:#697386
+}
+.theme-light .editor-options-menu hr{
+    border-color:#d9dde5
 }
 .source-wrap{
     display:flex;
@@ -1568,6 +1699,11 @@ footer{
     border-color:#d5dae3;
     color:#303541
 }
+.theme-light .view-tools .toc-preview-toggle[aria-pressed="true"]{
+    background:#e5dcff;
+    border-color:#7953b8;
+    color:#4c278f
+}
 .theme-light .preflight-actions .primary{
     background:#7040d6;
     border-color:#7040d6;
@@ -1601,6 +1737,9 @@ footer{
 }
 .pdf-export-settings .checkbox-row input{
     accent-color:#8b5cf6
+}
+.pdf-export-settings .checkbox-row{
+    cursor:pointer
 }
 .theme-light .pdf-export-settings{
     border-color:#d5dae3;

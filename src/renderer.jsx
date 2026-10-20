@@ -1,9 +1,10 @@
 import { createRoot } from 'react-dom/client';
 import { Previewer } from 'pagedjs';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { createBookStyles, kitFontRoles } from './bookStyles';
-import { toCanonicalHtml, isIsolatedDashLine } from './canonical';
+import { createBookStyles, kitFontRoles, normalizeColumnCount } from './bookStyles';
+import { toCanonicalHtml, isIsolatedDashLine, getColumnCountDirective, hasLocalColumnsBlock } from './canonical';
 import { PREVIEW_SCALE } from './bookSizes';
+import { createPdfProject } from './pdfProject';
 import { kits } from './builtinKits';
 import { FONT_PAIRINGS, googleFamilyFor } from './fontCatalog';
 import { useSpellcheck } from './useSpellcheck';
@@ -38,6 +39,13 @@ const fontNamesOf = value => {
   const roles = kitFontRoles(value);
   return { title: familyOf(roles.title), subtitle: familyOf(roles.subtitle), body: familyOf(roles.body) };
 };
+
+let paginationQueue = Promise.resolve();
+function paginate(content, stylesheet, target) {
+  const result = paginationQueue.then(() => new Previewer().preview(content, [stylesheet], target));
+  paginationQueue = result.then(() => undefined, () => undefined);
+  return result;
+}
 
 // Families are embedded once and shared: the same face can be the body font in
 // one role and the title font in another, so an import appends its @font-face
@@ -83,6 +91,91 @@ async function waitForImages(text = '') {
     image.onerror = () => resolve();
     image.src = src;
   })));
+}
+
+function createTableOfContentsHtml(html, includeTableOfContents) {
+  const document = new DOMParser().parseFromString(html || '', 'text/html');
+  const headings = [...document.body.querySelectorAll('h1, h2, h3, h4, h5, h6')];
+  const headingSet = new Set(headings);
+  const usedIds = new Set([...document.querySelectorAll('[id]')]
+    .filter(element => !headingSet.has(element))
+    .map(element => element.id));
+  const headingIds = headings.map((heading, index) => {
+    let id = heading.id || `manuscript-toc-heading-${index}`;
+    while (usedIds.has(id)) id += '-toc';
+    usedIds.add(id);
+    heading.id = id;
+    return id;
+  });
+  if (includeTableOfContents && headings.length) {
+    const nav = document.createElement('nav');
+    nav.className = 'table-of-contents';
+    nav.setAttribute('aria-label', 'Table of contents');
+    const title = document.createElement('h2');
+    title.textContent = 'Contents';
+    nav.append(title);
+
+    const list = document.createElement('ol');
+    headings.forEach((heading, index) => {
+      const item = document.createElement('li');
+      item.className = `toc-level-${heading.tagName.slice(1)}`;
+      const link = document.createElement('a');
+      link.href = `#${headingIds[index]}`;
+      link.textContent = heading.textContent.trim() || 'Untitled heading';
+      const pageNumber = document.createElement('span');
+      pageNumber.className = 'toc-page-number';
+      pageNumber.dataset.tocIndex = String(index);
+      pageNumber.textContent = '—';
+      item.append(link, pageNumber);
+      list.append(item);
+    });
+    nav.append(list);
+    document.body.insertBefore(nav, document.body.firstChild);
+    const pageBreak = document.createElement('div');
+    pageBreak.className = 'page-break toc-page-break';
+    pageBreak.setAttribute('aria-hidden', 'true');
+    nav.after(pageBreak);
+  }
+  return { html: document.body.innerHTML, headingIds };
+}
+
+async function withTableOfContents(project, settings) {
+  const toc = createTableOfContentsHtml(project.html, project.kit.includeTableOfContents);
+  if (!project.kit.includeTableOfContents || !toc.headingIds.length) return toc.html;
+  const outputDocument = new DOMParser().parseFromString(toc.html, 'text/html');
+  const exportProject = createPdfProject(project, settings);
+  const content = withPreviewAssetUrls(toc.html);
+  await waitForImages(content);
+  await window.document.fonts.ready;
+  const root = document.createElement('div');
+  root.style.cssText = `position:absolute;left:-20000px;top:0;width:${(exportProject.kit.pageWidthMm || 210) * (96 / 25.4)}px;visibility:hidden;pointer-events:none;`;
+  const staging = document.createElement('div');
+  staging.className = 'book-preview';
+  root.append(staging);
+  document.body.append(root);
+  const stylesheet = {
+    [`${window.location.href}#manuscript-toc-preview`]: withPreviewAssetUrls(createBookStyles(exportProject.kit, {
+      scope: '.book-preview, .pagedjs_page_content',
+      title: project.title,
+      html: content,
+      headerFooter: { pageNumbers: project.metadata?.pageNumbers || 'off', runningHead: project.metadata?.runningHead || 'off' },
+    })),
+  };
+  try {
+    await paginate(content, stylesheet, staging);
+    const pages = [...staging.querySelectorAll('.pagedjs_page')];
+    toc.headingIds.forEach((id, index) => {
+      const page = pages.findIndex(pageElement => [...pageElement.querySelectorAll('[id]')].some(element => element.id === id)) + 1;
+      const number = [...staging.querySelectorAll('[data-toc-index]')].find(element => element.dataset.tocIndex === String(index));
+      if (number) number.textContent = String(page || 1);
+      const outputNumber = [...outputDocument.querySelectorAll('[data-toc-index]')].find(element => element.dataset.tocIndex === String(index));
+      if (outputNumber) outputNumber.textContent = String(page || 1);
+    });
+  } finally {
+    root.remove();
+  }
+
+  return outputDocument.body.innerHTML;
 }
 
 function updateImageMarkdown(source, targetSrc, image) {
@@ -144,7 +237,17 @@ function App() {
   const pdfRequestId = useRef(0);
   const pageCount = mode === 'Page' ? pdfPageCount || bookPageCount : bookPageCount;
   const checkText = useSpellcheck();
+  const columnCountDirective = getColumnCountDirective(source);
+  const hasLocalColumns = hasLocalColumnsBlock(source);
+  const effectiveKit = useMemo(() => ({
+    ...kit,
+    columnCount: columnCountDirective ?? (hasLocalColumns ? 1 : normalizeColumnCount(kit.columnCount)),
+  }), [kit, columnCountDirective, hasLocalColumns]);
   const html = useMemo(() => toCanonicalHtml(source, { dropCaps: !!kit.dropCaps }), [source, kit.dropCaps]);
+  const previewContent = useMemo(
+    () => createTableOfContentsHtml(html, !!kit.includeTableOfContents),
+    [html, kit.includeTableOfContents],
+  );
   const headingSections = useMemo(() => {
     if (!html) return [];
     const document = new DOMParser().parseFromString(html, 'text/html');
@@ -167,6 +270,12 @@ function App() {
   const refreshRecentProjects = async () => {
     const list = await window.manuscript?.listProjects();
     if (list) setRecentProjects(list);
+  };
+
+  const removeRecentProject = async recentPath => {
+    const removed = await window.manuscript?.removeRecentProject(recentPath);
+    if (!removed) throw new Error('Could not remove the recent manuscript.');
+    await refreshRecentProjects();
   };
 
   const save = async (quiet = false) => {
@@ -212,13 +321,13 @@ function App() {
   // Inputs that actually change pagination, compared across effect runs so a
   // zoom-only changes skip the reader-position reset and typing debounce.
   // Pagination stays at print size; only the finished page stack changes size.
-  const layoutRef = useRef({ html, kit, title, mode, zoom, pageNumbers: metadata.pageNumbers, runningHead: metadata.runningHead });
+  const layoutRef = useRef({ html, kit: effectiveKit, title, mode, zoom, pageNumbers: metadata.pageNumbers, runningHead: metadata.runningHead });
   useEffect(() => {
     const previous = layoutRef.current;
-    const layoutChanged = previous.html !== html || previous.kit !== kit || previous.title !== title;
-    const nonContentChanged = previous.kit !== kit || previous.title !== title || previous.mode !== mode
+    const layoutChanged = previous.html !== html || previous.kit !== effectiveKit || previous.title !== title;
+    const nonContentChanged = previous.kit !== effectiveKit || previous.title !== title || previous.mode !== mode
       || previous.zoom !== zoom || previous.pageNumbers !== metadata.pageNumbers || previous.runningHead !== metadata.runningHead;
-    layoutRef.current = { html, kit, title, mode, zoom, pageNumbers: metadata.pageNumbers, runningHead: metadata.runningHead };
+    layoutRef.current = { html, kit: effectiveKit, title, mode, zoom, pageNumbers: metadata.pageNumbers, runningHead: metadata.runningHead };
     // Keep the current spread/page while the replacement preview is prepared.
     // Resetting it or clearing the preview here made every edit jump to a blank
     // first page before pagination had finished.
@@ -229,7 +338,7 @@ function App() {
     if (!previewRef.current || previewHidden) return undefined;
     const delay = layoutChanged && (mode === 'Book' || mode === 'Page') ? 300 : 0;
     const timer = setTimeout(() => {
-      const content = withPreviewAssetUrls(html || '<p></p>');
+      const content = withPreviewAssetUrls(previewContent.html || '<p></p>');
       const render = async () => {
         const container = previewRef.current;
         if (!container || currentRender !== renderId.current) return;
@@ -250,21 +359,21 @@ function App() {
         const staging = document.createElement('div');
         staging.className = 'book-preview';
         const previewScale = PREVIEW_SCALE * (zoom / 100);
-        const fullPageWidth = (kit.pageWidthMm || 210) * (96 / 25.4);
-        staging.style.cssText = `position:fixed;left:-20000px;top:0;width:${Math.max(container.clientWidth / previewScale, fullPageWidth)}px;visibility:hidden;pointer-events:none;`;
+        const fullPageWidth = (effectiveKit.pageWidthMm || 210) * (96 / 25.4);
+        staging.style.cssText = `position:absolute;left:-20000px;top:0;width:${Math.max(container.clientWidth / previewScale, fullPageWidth)}px;visibility:hidden;pointer-events:none;`;
         container.appendChild(staging);
-        const previewStyles = withPreviewAssetUrls(createBookStyles(kit, {
+        const previewStyles = withPreviewAssetUrls(createBookStyles(effectiveKit, {
           scope: '.book-preview, .pagedjs_page_content',
           // Paginate at the physical size used by PDF export; apply visual zoom after pagination.
           scale: 1,
           title,
-          html,
+          html: previewContent.html,
           headerFooter: { pageNumbers: metadata.pageNumbers || 'off', runningHead: metadata.runningHead || 'off' },
         }));
         const stylesheet = { [`${window.location.href}#manuscript-preview`]: previewStyles };
         let flow;
         try {
-          flow = await new Previewer().preview(content, [stylesheet], staging);
+          flow = await paginate(content, stylesheet, staging);
         } catch (error) {
           staging.remove();
           throw error;
@@ -274,6 +383,11 @@ function App() {
         if (pagesRoot) pagesRoot.style.zoom = String(previewScale);
         const total = flow?.total || staging.querySelectorAll('.pagedjs_page').length || 1;
         const pages = [...staging.querySelectorAll('.pagedjs_page')];
+        previewContent.headingIds.forEach((id, index) => {
+          const pageNumber = pages.findIndex(pageElement => [...pageElement.querySelectorAll('[id]')].some(element => element.id === id)) + 1;
+          const label = [...staging.querySelectorAll('[data-toc-index]')].find(element => element.dataset.tocIndex === String(index));
+          if (label) label.textContent = String(pageNumber || 1);
+        });
         const displayPage = Math.min(Math.max(page, 1), total);
         // Folio parity fix. paged.js numbers pages with a real CSS counter
         // (`counter-increment: page` per page, `counter(page)`/`counter(pages)`
@@ -301,7 +415,8 @@ function App() {
         setBookPageCount(total);
         setPreviewBusy(false);
         const pagedSections = headingSections.map((section, index) => {
-          const heading = [...container.querySelectorAll(`h${section.level}`)].find(item => item.textContent.trim() === section.text);
+          const id = previewContent.headingIds[index];
+          const heading = [...container.querySelectorAll('[id]')].find(item => item.id === id);
           const pageIndex = heading ? pages.findIndex(pageElement => pageElement.contains(heading)) + 1 : 1;
           return { ...section, id: `heading-${index}`, page: pageIndex || 1 };
         });
@@ -316,7 +431,7 @@ function App() {
       });
     }, delay);
     return () => clearTimeout(timer);
-  }, [activeView, html, headingSections, kit, mode, title, metadata.pageNumbers, metadata.runningHead, viewportMode, zoom]);
+  }, [activeView, html, previewContent, headingSections, effectiveKit, mode, title, metadata.pageNumbers, metadata.runningHead, viewportMode, zoom]);
 
   useEffect(() => {
     const requestId = ++pdfRequestId.current;
@@ -333,7 +448,11 @@ function App() {
     setPdfPageCount(0);
     const timer = setTimeout(async () => {
       try {
-        const bytes = await window.manuscript?.renderPdf(project);
+        const pdfProject = { ...project, kit: effectiveKit };
+        if (effectiveKit.includeTableOfContents) {
+          pdfProject.html = await withTableOfContents(pdfProject, {});
+        }
+        const bytes = await window.manuscript?.renderPdf(pdfProject);
         if (!bytes) throw new Error('The PDF preview returned no document.');
         if (!cancelled && requestId === pdfRequestId.current) {
           setPdfData(new Uint8Array(bytes));
@@ -352,7 +471,7 @@ function App() {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [activeView, html, kit, metadata, mode, projectPath, title, viewportMode]);
+  }, [activeView, html, effectiveKit, metadata, mode, projectPath, title, viewportMode]);
 
   const updatePdfPageCount = useCallback(total => {
     setPdfPageCount(total);
@@ -501,8 +620,17 @@ function App() {
   };
 
   const exportBook = async (formatName, settings) => {
-    const file = await window.manuscript?.exportBook(formatName, project, settings);
-    if (file) { setNotice(`${formatName.toUpperCase()} export saved`); setExportOpen(false); }
+    try {
+      let exportProject = { ...project, kit: effectiveKit };
+      if (formatName === 'pdf' && effectiveKit.includeTableOfContents) {
+        exportProject = { ...exportProject, html: await withTableOfContents(exportProject, settings) };
+      }
+      const file = await window.manuscript?.exportBook(formatName, exportProject, settings);
+      if (file) { setNotice(`${formatName.toUpperCase()} export saved`); setExportOpen(false); }
+    } catch (error) {
+      console.error(`${formatName.toUpperCase()} export failed`, error);
+      setNotice(`${formatName.toUpperCase()} export failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
   };
 
   const runPreflight = async () => {
@@ -622,7 +750,7 @@ function App() {
       lineHeight: templateData?.lineHeight,
       titleInk: templateData?.titleInk,
       subtitleInk: templateData?.subtitleInk,
-      columnCount: templateData?.columnCount === 2 ? 2 : 1,
+      columnCount: normalizeColumnCount(templateData?.columnCount),
       chapterBreaks: !!templateData?.chapterBreaks,
       dropCaps: !!templateData?.dropCaps,
       dropCapLines: templateData?.dropCapLines === 2 ? 2 : 3,
@@ -682,18 +810,18 @@ function App() {
     window.addEventListener('pointerup', stop);
   };
 
-  if (!projectPath) return <Dashboard showNew={showNew} setShowNew={setShowNew} newTitle={newTitle} setNewTitle={setNewTitle} onOpen={openProject} onCreate={newProject} recentProjects={recentProjects} onOpenRecent={openRecent} theme={theme} onThemeChange={() => setTheme(current => current === 'dark' ? 'light' : 'dark')} />;
+  if (!projectPath) return <Dashboard showNew={showNew} setShowNew={setShowNew} newTitle={newTitle} setNewTitle={setNewTitle} onOpen={openProject} onCreate={newProject} recentProjects={recentProjects} onOpenRecent={openRecent} onRemoveRecent={removeRecentProject} theme={theme} onThemeChange={() => setTheme(current => current === 'dark' ? 'light' : 'dark')} />;
 
   return <main className={`app-shell ${activeView.toLowerCase()}-view theme-${theme}`}>
     <Topbar title={title} notice={notice} words={words} pageCount={pageCount} activeView={activeView} theme={theme} onThemeChange={() => setTheme(current => current === 'dark' ? 'light' : 'dark')} onViewChange={setActiveView} onRename={rename} onNew={newProject} onOpen={openProject} onSave={() => save(false)} onExport={runPreflight} onOpenTemplates={() => window.manuscript?.openTemplateManager(theme)} onRecover={() => setRecoveryOpen(true)} />
     <div className="workspace" style={{ '--binder-width': binderCollapsed ? '44px' : '220px', '--editor-width': `${editorWidth}px`, '--inspector-width': inspectorCollapsed ? '44px' : '270px' }}>
       <Binder words={words} sections={sections} activeSection={activeSection} collapsed={binderCollapsed} onToggle={() => setBinderCollapsed(value => !value)} onSelect={selectSection} />
-      <EditorPanel source={source} setSource={value => { setSource(value); setNotice('Unsaved changes'); }} pageWarning={pageWarning} checkText={checkText} onFontApply={prepareParagraphFont} />
+      <EditorPanel source={source} setSource={value => { setSource(value); setNotice('Unsaved changes'); }} pageWarning={pageWarning} checkText={checkText} onFontApply={prepareParagraphFont} columnCount={columnCountDirective ?? normalizeColumnCount(kit.columnCount)} hasColumnDirective={columnCountDirective !== null} onSetColumnCount={() => setNotice('Unsaved changes')} />
       <div className="resize-handle" role="separator" aria-label="Resize editor and preview" onPointerDown={startResize} />
-      <PreviewStage mode={mode} kit={kit} zoom={zoom} previewRef={previewRef} previewBusy={mode === 'Page' ? pdfPreviewBusy : previewBusy} onImageSelect={selectPreviewImage} pdfData={pdfData} pdfError={pdfError} page={page} setPage={setPage} setPageCount={updatePdfPageCount} controls={<Subbar mode={mode} setMode={setMode} page={page} pageCount={pageCount} setPage={setPage} zoom={zoom} setZoom={setZoom} />} />
-      <Inspector tab={tab} setTab={setTab} kit={kit} setKit={setKit} onApplyTemplate={applyTemplate} setPageSize={setPageSize} metadata={metadata} setMetadata={setMetadata} title={title} setTitle={setTitle} onImport={importAsset} recentImage={recentImage} selectedImage={selectedImage} onImageResize={resizeRecentImage} onFontLoad={loadGoogleFont} onFontAll={useFontEverywhere} onRemix={remixFonts} collapsed={inspectorCollapsed} onToggle={() => setInspectorCollapsed(value => !value)} />
+      <PreviewStage mode={mode} kit={effectiveKit} zoom={zoom} previewRef={previewRef} previewBusy={mode === 'Page' ? pdfPreviewBusy : previewBusy} onImageSelect={selectPreviewImage} pdfData={pdfData} pdfError={pdfError} page={page} setPage={setPage} setPageCount={updatePdfPageCount} controls={<Subbar mode={mode} setMode={setMode} page={page} pageCount={pageCount} setPage={setPage} zoom={zoom} setZoom={setZoom} tableOfContentsEnabled={!!kit.includeTableOfContents} canAddTableOfContents={headingSections.length > 0} onTableOfContentsChange={includeTableOfContents => setKit(current => ({ ...current, includeTableOfContents }))} />} />
+      <Inspector tab={tab} setTab={setTab} kit={kit} setKit={setKit} onApplyTemplate={applyTemplate} setPageSize={setPageSize} metadata={metadata} setMetadata={setMetadata} title={title} setTitle={setTitle} onImport={importAsset} recentImage={recentImage} selectedImage={selectedImage} onImageResize={resizeRecentImage} onFontLoad={loadGoogleFont} onFontAll={useFontEverywhere} onRemix={remixFonts} collapsed={inspectorCollapsed} onToggle={() => setInspectorCollapsed(value => !value)} localColumnsOnly={hasLocalColumns && columnCountDirective === null} />
     </div>
-    {exportOpen && <ExportModal title={title} kit={kit} onClose={() => setExportOpen(false)} onExport={exportBook} />}
+    {exportOpen && <ExportModal title={title} kit={kit} hasHeadings={headingSections.length > 0} onTableOfContentsChange={includeTableOfContents => setKit(current => ({ ...current, includeTableOfContents }))} onClose={() => setExportOpen(false)} onExport={exportBook} />}
     {preflightOpen && <PreflightModal findings={preflightFindings} onCancel={() => setPreflightOpen(false)} onContinue={continueAfterPreflight} />}
     {recoveryOpen && <RecoveryModal projectPath={projectPath} onClose={() => setRecoveryOpen(false)} onRestore={restoreRecovery} />}
   </main>;

@@ -5,7 +5,7 @@ import { Compartment, EditorState } from '@codemirror/state';
 import { Decoration, EditorView, ViewPlugin } from '@codemirror/view';
 import { linter, lintGutter } from '@codemirror/lint';
 import { useEffect, useRef, useState } from 'react';
-import { isIsolatedDashLine } from '../canonical';
+import { isIsolatedDashLine, setColumnCountDirective } from '../canonical';
 import { FontPickerControl } from './FontPickerControl';
 
 const markerPlugin = ViewPlugin.fromClass(class {
@@ -42,7 +42,7 @@ const wrapCompartment = new Compartment();
 // Wired by the parent from the nspell (spelling) + retext (grammar) pipeline
 // described in manuscript-agent-spec.md, on the same ~800ms debounce as
 // autosave — CodeMirror's linter() handles the debounce itself via `delay`.
-export function EditorPanel({ source, setSource, pageWarning, checkText, onFontApply }) {
+export function EditorPanel({ source, setSource, pageWarning, checkText, onFontApply, columnCount, hasColumnDirective, onSetColumnCount }) {
   const editorRef = useRef(null);
   const viewRef = useRef(null);
   // A writing app defaults to wrapped prose; the head button flips it.
@@ -98,6 +98,28 @@ export function EditorPanel({ source, setSource, pageWarning, checkText, onFontA
     view.focus();
   };
 
+  const setDocumentColumns = count => {
+    const view = viewRef.current;
+    if (!view) return;
+    const currentSource = view.state.doc.toString();
+    const nextSource = setColumnCountDirective(currentSource, count);
+    let prefixLength = 0;
+    while (prefixLength < currentSource.length && currentSource[prefixLength] === nextSource[prefixLength]) prefixLength += 1;
+    let suffixLength = 0;
+    while (suffixLength < currentSource.length - prefixLength
+      && suffixLength < nextSource.length - prefixLength
+      && currentSource[currentSource.length - 1 - suffixLength] === nextSource[nextSource.length - 1 - suffixLength]) suffixLength += 1;
+    view.dispatch({
+      changes: {
+        from: prefixLength,
+        to: currentSource.length - suffixLength,
+        insert: nextSource.slice(prefixLength, nextSource.length - suffixLength),
+      },
+    });
+    view.focus();
+    onSetColumnCount?.(count);
+  };
+
   const applyParagraphFont = async (family, isGoogleFont) => {
     const view = viewRef.current;
     if (!view || !family || applyingFont) return;
@@ -142,5 +164,9 @@ export function EditorPanel({ source, setSource, pageWarning, checkText, onFontA
     }
   };
 
-  return <section className="editor-panel"><div className="editor-head"><span>Markdown + HTML · Act I · Chapter One</span><div className="editor-head-tools"><FontPickerControl label="Font for paragraph" placeholder="Paragraph font" value={paragraphFont} onSelect={applyParagraphFont} compact /><button type="button" onClick={() => insertMarker('---')} title="Insert a hard page break">Page break</button><button type="button" onClick={() => insertMarker('----')} title="Insert a decorative divider">Divider</button><button type="button" onClick={toggleWrap} aria-pressed={wrap} title="Toggle word wrap">Wrap</button></div></div><div className="source-wrap"><div ref={editorRef} className="editor-canvas" aria-label="Document source" /></div>{pageWarning && <div className="source-hint">Use a blank line before and after <strong>---</strong> for a hard page break.</div>}<footer><span>Markdown + HTML · UTF-8</span><span>Autosaves while you write</span></footer></section>;
+  const closeOptions = event => {
+    event.currentTarget.closest('details').open = false;
+  };
+
+  return <section className="editor-panel"><div className="editor-head"><span>Markdown + HTML · Act I · Chapter One</span><div className="editor-head-tools"><FontPickerControl label="Font for paragraph" placeholder="Paragraph font" value={paragraphFont} onSelect={applyParagraphFont} compact /><details className="editor-options"><summary aria-label="Show more editor options">More</summary><div className="editor-options-menu"><span className="editor-options-label">Whole-book columns</span>{[1, 2, 3].map(count => <button type="button" key={count} onClick={event => { setDocumentColumns(count); closeOptions(event); }} aria-pressed={columnCount === count}>{count === 1 ? 'One column' : `${count} columns`}</button>)}{hasColumnDirective && <button type="button" onClick={event => { setDocumentColumns(null); closeOptions(event); }}>Use Style setting</button>}<hr /><button type="button" onClick={event => { insertMarker('---'); closeOptions(event); }} title="Insert a hard page break">Page break</button><button type="button" onClick={event => { insertMarker('----'); closeOptions(event); }} title="Insert a decorative divider">Divider</button><button type="button" onClick={event => { toggleWrap(); closeOptions(event); }} aria-pressed={wrap} title="Toggle word wrap">Word wrap: {wrap ? 'On' : 'Off'}</button></div></details></div></div><div className="source-wrap"><div ref={editorRef} className="editor-canvas" aria-label="Document source" /></div>{pageWarning && <div className="source-hint">Use a blank line before and after <strong>---</strong> for a hard page break.</div>}<footer><span>Markdown + HTML · UTF-8</span><span>Autosaves while you write</span></footer></section>;
 }

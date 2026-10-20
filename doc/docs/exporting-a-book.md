@@ -22,6 +22,8 @@ The preflight check looks for missing image assets and page content that may ove
 ## Set PDF options
 
 For PDF, choose the page size, margins, and bleed in the export dialog. These settings apply to that PDF export.
+Enable **Add table of contents with page numbers** to add a contents section before the manuscript. The table of contents starts on its own page in the **Book** preview, **PDF View**, and exported PDF. It lists manuscript headings with page numbers, recalculated for the PDF's selected print settings.
+In **Book** or **PDF View**, use the **TOC** button beside the zoom controls to show or hide the contents without opening the export dialog. This setting is shared with the PDF export checkbox.
 
 EPUB is created as a reflowable EPUB 3 file. HTML is a standalone web edition. Since each format has different reading constraints, review the corresponding preview mode before exporting.
 

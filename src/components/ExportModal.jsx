@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { BOOK_SIZES, findBookSize } from '../bookSizes';
 
-export function ExportModal({ title, kit = {}, onClose, onExport }) {
+export function ExportModal({ title, kit = {}, hasHeadings = true, onTableOfContentsChange, onClose, onExport }) {
   const [pageSizeId, setPageSizeId] = useState(kit.pageSizeId || 'a4');
   const [marginMm, setMarginMm] = useState(String(Math.round((Number.isFinite(kit.margin) ? kit.margin : 52) * 25.4 / 72)));
   const [bleedMm, setBleedMm] = useState('3');
@@ -16,6 +16,8 @@ export function ExportModal({ title, kit = {}, onClose, onExport }) {
       <small className="muted">{size.widthMm} × {size.heightMm} mm page size.</small>
       <label>Bleed per edge <span>mm</span><input className="field" type="number" min="0" max="10" step="0.5" value={bleedMm} onChange={event => setBleedMm(event.target.value)} /></label>
       <label className="checkbox-row"><input type="checkbox" checked={paperBleed} onChange={event => setPaperBleed(event.target.checked)} /> Extend paper color through the bleed area</label>
+      <label className="checkbox-row"><input type="checkbox" checked={!!kit.includeTableOfContents} disabled={!hasHeadings} onChange={event => onTableOfContentsChange(event.target.checked)} /> Add table of contents with page numbers</label>
+      {!hasHeadings && <small className="muted">Add a heading to the manuscript to create a contents page.</small>}
     </div>
     <div className="exports">{[['pdf', 'PDF', 'Print-ready pages'], ['epub', 'EPUB', 'Reflowable ebook'], ['html', 'HTML', 'Standalone web edition']].map(([id, name, description]) => <button onClick={() => onExport(id, id === 'pdf' ? { pageSizeId, marginMm: Number(marginMm), bleedMm: Number(bleedMm), paperBleed } : undefined)} key={id}><strong>{name}</strong><small>{description}</small><span>→</span></button>)}</div>
     <small className="export-note">PDF uses Electron’s print engine; EPUB3 and HTML are portable files.</small></section></div>;

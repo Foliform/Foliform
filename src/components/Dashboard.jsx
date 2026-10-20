@@ -1,6 +1,21 @@
+import { useState } from 'react';
 import { BrandMark } from './BrandMark';
 
-export function Dashboard({ showNew, setShowNew, newTitle, setNewTitle, onOpen, onCreate, recentProjects = [], onOpenRecent, theme, onThemeChange }) {
+export function Dashboard({ showNew, setShowNew, newTitle, setNewTitle, onOpen, onCreate, recentProjects = [], onOpenRecent, onRemoveRecent, theme, onThemeChange }) {
+  const [openRecentMenu, setOpenRecentMenu] = useState(null);
+  const [recentError, setRecentError] = useState('');
+
+  const removeRecent = async (event, project) => {
+    event.stopPropagation();
+    try {
+      await onRemoveRecent(project.path);
+      setOpenRecentMenu(null);
+      setRecentError('');
+    } catch {
+      setRecentError('Could not remove this manuscript from Recent.');
+    }
+  };
+
   return <main className={`app-shell dashboard theme-${theme}`}>
     <header className="topbar">
       <div className="brand"><BrandMark /><span>Foliform</span></div>
@@ -11,7 +26,7 @@ export function Dashboard({ showNew, setShowNew, newTitle, setNewTitle, onOpen, 
       <h1>Your next book starts here.</h1>
       <p>Create a portable manuscript project, then write and typeset it in one focused workspace.</p>
       <div className="welcome-actions"><button className="primary" onClick={() => setShowNew(true)}>Create a manuscript <span>→</span></button><button onClick={onOpen}>Open an existing project</button></div>
-      {recentProjects.length > 0 && <div className="template-row"><h2>Recent manuscripts</h2><div className="recent-grid">{recentProjects.map(project => <div className="template-card recent-card" key={project.path} onClick={() => onOpenRecent(project.path)}><div className="blank-paper"><span>{project.title || 'Untitled manuscript'}</span><i></i><i></i><i></i></div><div><b>{project.title || 'Untitled manuscript'}</b><small>{new Date(project.lastOpened).toLocaleDateString()}</small></div></div>)}</div></div>}
+      {recentProjects.length > 0 && <div className="template-row"><h2>Recent manuscripts</h2>{recentError && <p className="recent-error" role="alert">{recentError}</p>}<div className="recent-grid">{recentProjects.map(project => <div className="template-card recent-card" key={project.path} onClick={() => onOpenRecent(project.path)}><button className="recent-menu-toggle" aria-label={`More options for ${project.title || 'Untitled manuscript'}`} aria-expanded={openRecentMenu === project.path} onClick={event => { event.stopPropagation(); setRecentError(''); setOpenRecentMenu(current => current === project.path ? null : project.path); }}>⋯</button>{openRecentMenu === project.path && <div className="recent-menu" role="menu"><button role="menuitem" onClick={event => removeRecent(event, project)}>Remove from Recent</button></div>}<div className="blank-paper"><span>{project.title || 'Untitled manuscript'}</span><i></i><i></i><i></i></div><div><b>{project.title || 'Untitled manuscript'}</b><small>{new Date(project.lastOpened).toLocaleDateString()}</small></div></div>)}</div></div>}
       <div className="template-row"><h2>Start with a blank page</h2><div className="template-card" onClick={() => setShowNew(true)}><div className="blank-paper"><span>Untitled manuscript</span><i></i><i></i><i></i></div><div><b>Blank manuscript</b><small>Markdown + HTML · Your Brand Kit</small></div></div></div>
     </section>
     {showNew && <div className="modal-backdrop"><section className="new-modal"><button className="close" onClick={() => setShowNew(false)}>×</button><span className="eyebrow">New project</span><h2>Create a manuscript</h2><label>Working title</label><input autoFocus className="field" value={newTitle} onChange={event => setNewTitle(event.target.value)} onKeyDown={event => event.key === 'Enter' && onCreate()} /><p className="muted">Write Markdown and HTML together in the same document.</p><button className="primary create-button" onClick={onCreate}>Create project</button></section></div>}

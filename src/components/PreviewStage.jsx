@@ -1,4 +1,4 @@
-import { dropCapMetrics, kitFontRoles } from '../bookStyles';
+import { dropCapMetrics, kitFontRoles, normalizeColumnCount } from '../bookStyles';
 import { PdfViewer } from './PdfViewer';
 
 export function PreviewStage({
@@ -49,7 +49,7 @@ export function PreviewStage({
     ...(paged ? null : { zoom: zoom / 100 }),
   };
   const contentStyle = paged ? undefined : {
-    columnCount: kit.columnCount === 2 ? 2 : 1,
+    columnCount: normalizeColumnCount(kit.columnCount),
     columnGap: '2em',
   };
   const handlePreviewClick = event => {

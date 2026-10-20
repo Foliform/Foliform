@@ -1,5 +1,7 @@
 import { FONT_CATALOG, systemFontStack } from './fontCatalog';
 
+export const normalizeColumnCount = value => [1, 2, 3].includes(Number(value)) ? Number(value) : 1;
+
 // Builds the CSS @page size value from a kit's stored mm dimensions, falling
 // back to A4 if a kit predates this feature. `scale` shrinks the physical mm
 // value itself (not a later CSS override) — see createBookStyles for why
@@ -124,7 +126,7 @@ export function createBookStyles(kit = {}, options = {}) {
   const subtitleInk = kit.subtitleInk || ink;
   const paper = kit.paper || '#fbf9f4';
   const accent = kit.accent || '#7c3aed';
-  const columnCount = kit.columnCount === 2 ? 2 : 1;
+  const columnCount = normalizeColumnCount(kit.columnCount);
   const contentSelector = options.scope || 'body';
   // `scope` may be a comma-separated list — the live preview passes
   // '.book-preview, .pagedjs_page_content' so one stylesheet covers both the
@@ -229,8 +231,8 @@ export function createBookStyles(kit = {}, options = {}) {
     @page { size: ${pageSizeCss(kit, scale)}; margin: ${margin}pt; ${footerRule} ${headerRule} ${bleedBoxes} }
     :root { --book-ink: ${ink}; --book-paper: ${paper}; --book-accent: ${accent}; --book-font: ${font}; --book-size: ${size}px; --book-line: ${lineHeight}; --book-title-font: ${roles.title}; --book-subtitle-font: ${roles.subtitle}; --book-title-ink: ${titleInk}; --book-subtitle-ink: ${subtitleInk}; }
     ${contentSelector} { margin: 0; color: var(--book-ink); background: var(--book-paper); font: var(--book-size)/var(--book-line) var(--book-font); column-count: ${columnCount}; column-gap: 2em; }
-    ${scoped('h1')} { font-family: var(--book-title-font); color: var(--book-title-ink); font-size: ${titleSize}px; break-after: avoid; ${columnCount === 2 ? 'column-span: all;' : ''} }
-    ${scoped('h2')} { font-family: var(--book-subtitle-font); color: var(--book-subtitle-ink); font-size: ${subtitleSize}px; break-after: avoid; ${columnCount === 2 ? 'column-span: all;' : ''} }
+    ${scoped('h1')} { font-family: var(--book-title-font); color: var(--book-title-ink); font-size: ${titleSize}px; break-after: avoid; ${columnCount > 1 ? 'column-span: all;' : ''} }
+    ${scoped('h2')} { font-family: var(--book-subtitle-font); color: var(--book-subtitle-ink); font-size: ${subtitleSize}px; break-after: avoid; ${columnCount > 1 ? 'column-span: all;' : ''} }
     ${scoped('h3, h4, h5, h6')} { break-after: avoid; }
     ${chapterBreakRule}
     ${chapterHeadRule}
@@ -251,6 +253,13 @@ export function createBookStyles(kit = {}, options = {}) {
        win as long as they fit; the clamp only catches oversized ones. */
     ${scoped('img')} { max-width: 100%; max-height: calc(100% - 2 * ${margin}pt); object-fit: contain; }
     ${scoped('.page-break')} { break-after: page; height: 0; margin: 0; }
+    ${scoped('.table-of-contents')} { column-span: all; }
+    ${scoped('.table-of-contents h2')} { margin-top: 0; text-align: center; }
+    ${scoped('.table-of-contents ol')} { margin: 2em 0; padding: 0; list-style: none; }
+    ${scoped('.table-of-contents li')} { display: flex; align-items: baseline; gap: 0.75em; margin: 0.5em 0; break-inside: avoid; }
+    ${scoped('.table-of-contents a')} { flex: 1; color: inherit; text-decoration: none; }
+    ${scoped('.table-of-contents .toc-page-number')} { width: 4em; flex: 0 0 4em; text-align: right; font-variant-numeric: tabular-nums; }
+    ${[2, 3, 4, 5, 6].map(level => `${scoped(`.table-of-contents .toc-level-${level}`)} { padding-left: ${(level - 1) * 1.1}em; }`).join('\n')}
     ${scoped('hr')} { break-after: avoid; border: 0; border-top: 1px solid ${ink}; }
     ${scoped('a')} { color: ${accent}; }
     ${scoped('code, pre')} { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
@@ -275,5 +284,7 @@ export function createBookStyles(kit = {}, options = {}) {
     ${scoped('.align-center')} { text-align: center; }
     ${scoped('.align-right')} { text-align: right; }
     ${scoped('.align-justify')} { text-align: justify; }
+    ${scoped('.manuscript-columns')} { display: flex; column-span: all; gap: 2em; align-items: flex-start; }
+    ${scoped('.manuscript-column')} { flex: 1 1 0; min-width: 0; }
   `;
 }

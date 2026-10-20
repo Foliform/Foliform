@@ -26,6 +26,51 @@ const DOMPurify = typeof window !== 'undefined' && typeof window.document !== 'u
 
 const BREAK_MARKER = '<div data-manuscript-page-break="true"></div>';
 const DIVIDER_MARKER = '<hr data-manuscript-divider="true">';
+const COLUMN_DIRECTIVE = /^\s*:::\s*columns\s+([1-3])\s*$/i;
+const COLUMN_BLOCK_OPEN = /^\s*:::\s*columns\s*$/i;
+const COLUMN_OPEN = /^\s*:::column\s*$/i;
+const COLUMN_CLOSE = /^\s*:::\s*$/;
+
+function findColumnDirectives(lines) {
+  const directives = [];
+  let codeFence = null;
+  lines.forEach((line, index) => {
+    const fence = line.match(/^\s*(`{3,}|~{3,})/);
+    if (fence) {
+      const marker = fence[1][0];
+      codeFence = codeFence === marker ? null : codeFence || marker;
+      return;
+    }
+    if (codeFence) return;
+    const match = line.match(COLUMN_DIRECTIVE);
+    if (match) directives.push({ index, count: Number(match[1]) });
+  });
+  return directives;
+}
+
+export function getColumnCountDirective(source) {
+  const directives = findColumnDirectives(String(source || '').split('\n'));
+  return directives.length ? directives[directives.length - 1].count : null;
+}
+
+export function setColumnCountDirective(source, count) {
+  if (count !== null && ![1, 2, 3].includes(count)) throw new RangeError('Column count must be 1, 2, 3, or null.');
+  const lines = String(source || '').split('\n');
+  const directives = findColumnDirectives(lines);
+  if (!directives.length) {
+    return count === null ? String(source || '') : `::: columns ${count}\n\n${source || ''}`;
+  }
+  directives.forEach(({ index }, directiveIndex) => {
+    lines[index] = count !== null && directiveIndex === 0 ? `::: columns ${count}` : '';
+  });
+  return lines.join('\n');
+}
+
+function stripColumnCountDirectives(source) {
+  const lines = source.split('\n');
+  findColumnDirectives(lines).forEach(({ index }) => { lines[index] = ''; });
+  return lines.join('\n');
+}
 
 // Special quote, font, and plain alignment blocks share one fence syntax: a
 // marker opened and closed on its own line, so the body can hold real Markdown
@@ -35,6 +80,89 @@ const DIVIDER_MARKER = '<hr data-manuscript-divider="true">';
 const FENCE_OPEN = /^:::\s*(pullquote|epigraph|left|center|right|justify)\s*$/i;
 const FONT_FENCE_OPEN = /^:::\s*font\s+"([^"\r\n]+)"(?:\s+(\d+(?:\.\d+)?)(px|pt|em|rem|%)?)?\s*$/i;
 const FENCE_CLOSE = /^:::\s*$/;
+
+function extractColumnBlocks(lines) {
+  const output = [];
+  const blocks = new Map();
+  let codeFence = null;
+  let index = 0;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const fence = line.match(/^\s*(`{3,}|~{3,})/);
+    if (fence) {
+      const marker = fence[1][0];
+      codeFence = codeFence === marker ? null : codeFence || marker;
+      output.push(line);
+      continue;
+    }
+    if (codeFence || !COLUMN_BLOCK_OPEN.test(line)) {
+      output.push(line);
+      continue;
+    }
+
+    const columns = [];
+    let cursor = i + 1;
+    let complete = false;
+    while (cursor < lines.length) {
+      while (cursor < lines.length && !lines[cursor].trim()) cursor += 1;
+      if (cursor < lines.length && COLUMN_CLOSE.test(lines[cursor])) {
+        complete = columns.length > 0;
+        cursor += 1;
+        break;
+      }
+      if (cursor >= lines.length || !COLUMN_OPEN.test(lines[cursor])) break;
+
+      cursor += 1;
+      const content = [];
+      let nestedFence = null;
+      let nestedBlockDepth = 0;
+      let columnClosed = false;
+      while (cursor < lines.length) {
+        const current = lines[cursor];
+        const code = current.match(/^\s*(`{3,}|~{3,})/);
+        if (code) {
+          const marker = code[1][0];
+          nestedFence = nestedFence === marker ? null : nestedFence || marker;
+          content.push(current);
+          cursor += 1;
+          continue;
+        }
+        if (!nestedFence) {
+          const fontOpen = current.match(FONT_FENCE_OPEN);
+          if (FENCE_OPEN.test(current) || fontOpen) {
+            nestedBlockDepth += 1;
+          } else if (COLUMN_CLOSE.test(current)) {
+            if (nestedBlockDepth > 0) nestedBlockDepth -= 1;
+            else {
+              columnClosed = true;
+              cursor += 1;
+              break;
+            }
+          }
+        }
+        content.push(current);
+        cursor += 1;
+      }
+      if (!columnClosed) break;
+      columns.push(content);
+    }
+
+    if (!complete) {
+      output.push(line);
+      continue;
+    }
+    const token = `\u0000MSCOLUMNS${index++}\u0000`;
+    blocks.set(token, columns);
+    output.push(token);
+    i = cursor - 1;
+  }
+  return { lines: output, blocks };
+}
+
+export function hasLocalColumnsBlock(source) {
+  const lines = stripColumnCountDirectives(String(source || '')).split('\n');
+  return extractColumnBlocks(lines).blocks.size > 0;
+}
 
 // Plain alignment blocks: `::: center` / `::: left` / `::: right` /
 // `::: justify` wrap their body in a <div class="align-*">, for the cases a
@@ -222,7 +350,8 @@ function renderSpecialBlock({ type, family, size, lines }) {
  * happened when the old code escaped it to literal dashes instead).
  */
 function markdownToHtml(source) {
-  const { lines, blocks } = extractSpecialBlocks(source.split('\n'));
+  const columnBlocks = extractColumnBlocks(stripColumnCountDirectives(source).split('\n'));
+  const { lines, blocks } = extractSpecialBlocks(columnBlocks.lines);
   const isIsolated = index => isIsolatedDashLine({
     lineCount: lines.length,
     lineNumber: index + 1,
@@ -247,6 +376,10 @@ function markdownToHtml(source) {
   let html = marked.parse(normalized, { gfm: true, breaks: false });
   for (const [token, block] of blocks) {
     html = html.split(`<p>${token}</p>`).join(renderSpecialBlock(block));
+  }
+  for (const [token, columns] of columnBlocks.blocks) {
+    const content = columns.map(column => `<div class="manuscript-column">${markdownToHtml(column.join('\n')).trim()}</div>`).join('');
+    html = html.split(`<p>${token}</p>`).join(`<div class="manuscript-columns">${content}</div>`);
   }
   return html;
 }
